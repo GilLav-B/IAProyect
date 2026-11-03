@@ -1,0 +1,37 @@
+# ===== Secretos =====
+.env
+.env.*
+!.env.example
+
+# ===== .NET =====
+bin/
+obj/
+TestResults/
+*.user
+*.suo
+.vs/
+
+# ===== Node / Next.js =====
+node_modules/
+.next/
+out/
+npm-debug.log*
+.pnpm-debug.log*
+*.tsbuildinfo
+next-env.d.ts
+
+# ===== Python / Blender =====
+__pycache__/
+*.pyc
+.venv/
+*.blend1
+
+# ===== Object storage local (fotos, planos, renders, .blend generados) =====
+storage/*
+!storage/.gitkeep
+
+# ===== Sistema / editor =====
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
