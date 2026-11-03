@@ -90,9 +90,9 @@ public class PostgresMigrationTests
             "INSERT INTO projects (id, name, type) VALUES ('p', 'P', 'domestico');" +
             "INSERT INTO rooms (id, project_id, space_type, length_cm, width_cm, height_cm) VALUES ('h', 'p', 'sala', 500, 400, 270);" +
             "INSERT INTO designs (id, project_id, room_id, name, style, budget_mode, revision, favorite, structural_confirmations) " +
-            "VALUES ('d', 'p', 'h', 'D', 'moderno', 'ajustar', 0, false, '{}');" +
+            "VALUES ('d', 'p', 'h', 'D', 'moderno', 'ajustar', 0, false, ARRAY[]::text[]);" +
             "INSERT INTO products (id, name, category, kind, width_cm, depth_cm, height_cm, materials, colors, styles, price_min, price_max, images, variants) " +
-            "VALUES ('x', 'X', 'sofa', 'real', 100, 80, 80, '{tela}', '{gris}', '{moderno}', 1, 2, '{}', '{}');");
+            "VALUES ('x', 'X', 'sofa', 'real', 100, 80, 80, ARRAY['tela'], ARRAY['gris'], ARRAY['moderno'], 1, 2, ARRAY[]::text[], ARRAY[]::text[]);");
 
         var ex = await Assert.ThrowsAsync<PostgresException>(() => context.Database.ExecuteSqlRawAsync(
             "INSERT INTO design_objects (design_id, instance_id, catalog_id, type, x_cm, y_cm, z_cm, rotation, locked) " +
@@ -102,7 +102,7 @@ public class PostgresMigrationTests
         // Producto conceptual con SKU
         ex = await Assert.ThrowsAsync<PostgresException>(() => context.Database.ExecuteSqlRawAsync(
             "INSERT INTO products (id, name, category, kind, width_cm, depth_cm, height_cm, materials, colors, styles, price_min, price_max, sku, images, variants) " +
-            "VALUES ('c', 'C', 'sillon', 'conceptual', 90, 90, 80, '{tela}', '{beige}', '{japandi}', 0, 0, 'SKU-1', '{}', '{}');"));
+            "VALUES ('c', 'C', 'sillon', 'conceptual', 90, 90, 80, ARRAY['tela'], ARRAY['beige'], ARRAY['japandi'], 0, 0, 'SKU-1', ARRAY[]::text[], ARRAY[]::text[]);"));
         Assert.Equal("ck_products_conceptual", ex.ConstraintName);
     }
 }
