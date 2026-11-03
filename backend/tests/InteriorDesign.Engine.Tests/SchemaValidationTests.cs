@@ -10,23 +10,10 @@ namespace InteriorDesign.Engine.Tests;
 /// </summary>
 public class SchemaValidationTests
 {
-    private static readonly string SchemasDir = FindSchemasDir();
+    private static readonly string SchemasDir = ExampleImporter.SchemasDir;
     private static readonly BuildOptions Options = CreateOptions();
     private static readonly JsonSchema DesignState = Load("design-state.schema.json");
     private static readonly JsonSchema Catalog = Load("catalog.schema.json");
-
-    private static string FindSchemasDir()
-    {
-        var dir = new DirectoryInfo(AppContext.BaseDirectory);
-        while (dir is not null)
-        {
-            var candidate = Path.Combine(dir.FullName, "schemas");
-            if (File.Exists(Path.Combine(candidate, "design-state.schema.json")))
-                return candidate;
-            dir = dir.Parent;
-        }
-        throw new DirectoryNotFoundException("No se encontro la carpeta schemas/ del repositorio.");
-    }
 
     private static BuildOptions CreateOptions()
     {
@@ -40,8 +27,7 @@ public class SchemaValidationTests
     private static JsonSchema Load(string file) =>
         JsonSchema.FromFile(Path.Combine(SchemasDir, file), Options);
 
-    private static JsonNode Example(string file) =>
-        JsonNode.Parse(File.ReadAllText(Path.Combine(SchemasDir, "examples", file)))!;
+    private static JsonNode Example(string file) => ExampleImporter.Load(file);
 
     private static EvaluationResults Evaluate(JsonSchema schema, JsonNode instance)
     {

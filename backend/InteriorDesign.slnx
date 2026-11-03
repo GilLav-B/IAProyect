@@ -1,4 +1,8 @@
 <Solution>
+  <Folder Name="/src/">
+    <Project Path="src/InteriorDesign.Domain/InteriorDesign.Domain.csproj" />
+    <Project Path="src/InteriorDesign.Infrastructure/InteriorDesign.Infrastructure.csproj" />
+  </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/InteriorDesign.Engine.Tests/InteriorDesign.Engine.Tests.csproj" />
   </Folder>

@@ -19,4 +19,8 @@
     <Using Include="Xunit" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\InteriorDesign.Infrastructure\InteriorDesign.Infrastructure.csproj" />
+  </ItemGroup>
+
 </Project>
