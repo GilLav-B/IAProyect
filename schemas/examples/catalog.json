@@ -1,0 +1,37 @@
+{
+  "products": [
+    { "id": "sofa_001", "name": "Sofa Oslo", "category": "sofa", "kind": "real", "dimensions": { "width": 280, "depth": 95, "height": 85 }, "materials": ["tela"], "colors": ["beige", "gris", "negro"], "styles": ["moderno", "minimalista"], "price": { "min": 12999, "max": 15499 }, "attributes": { "plazas": 3 } },
+    { "id": "sofa_002", "name": "Sofa Bergen", "category": "sofa", "kind": "real", "dimensions": { "width": 220, "depth": 90, "height": 80 }, "materials": ["tela"], "colors": ["gris", "negro"], "styles": ["moderno", "industrial"], "price": { "min": 8999, "max": 10999 }, "attributes": { "plazas": 3 } },
+    { "id": "sofa_003", "name": "Sofa Kyoto", "category": "sofa", "kind": "real", "dimensions": { "width": 160, "depth": 85, "height": 80 }, "materials": ["tela"], "colors": ["beige", "blanco"], "styles": ["minimalista", "japandi"], "price": { "min": 6500, "max": 7999 }, "attributes": { "plazas": 2 } },
+    { "id": "mesa_centro_001", "name": "Mesa de centro Nord", "category": "mesa_centro", "kind": "real", "dimensions": { "width": 110, "depth": 60, "height": 40 }, "materials": ["madera"], "colors": ["madera_clara", "negro"], "styles": ["minimalista", "japandi", "moderno"], "price": { "min": 2200, "max": 2800 } },
+    { "id": "mueble_tv_001", "name": "Mueble TV Lund", "category": "mueble_tv", "kind": "real", "dimensions": { "width": 180, "depth": 40, "height": 50 }, "materials": ["madera"], "colors": ["madera_clara", "madera_oscura"], "styles": ["moderno", "minimalista", "japandi"], "price": { "min": 3500, "max": 4200 } },
+    { "id": "tv_65", "name": "TV 65 pulgadas", "category": "televisor", "kind": "real", "dimensions": { "width": 145, "depth": 8, "height": 84 }, "materials": ["vidrio", "metal"], "colors": ["negro"], "styles": ["moderno", "minimalista", "industrial", "japandi", "clasico"], "price": { "min": 8999, "max": 11999 }, "attributes": { "pulgadas": 65 } },
+    { "id": "tv_75", "name": "TV 75 pulgadas", "category": "televisor", "kind": "real", "dimensions": { "width": 168, "depth": 8, "height": 97 }, "materials": ["vidrio", "metal"], "colors": ["negro"], "styles": ["moderno", "minimalista", "industrial", "japandi", "clasico"], "price": { "min": 11999, "max": 15999 }, "attributes": { "pulgadas": 75 } },
+    { "id": "cama_001", "name": "Cama Queen Oslo", "category": "cama", "kind": "real", "dimensions": { "width": 160, "depth": 210, "height": 100 }, "materials": ["madera"], "colors": ["beige", "gris", "madera_clara"], "styles": ["moderno", "minimalista", "japandi"], "price": { "min": 7500, "max": 9500 }, "attributes": { "tamano": "queen" } },
+    { "id": "alfombra_001", "name": "Alfombra Lana", "category": "alfombra", "kind": "real", "dimensions": { "width": 200, "depth": 300, "height": 1 }, "materials": ["tela"], "colors": ["beige", "gris"], "styles": ["moderno", "minimalista", "japandi", "clasico"], "price": { "min": 2500, "max": 3500 } },
+    { "id": "lampara_001", "name": "Lampara de piso Arco", "category": "lampara", "kind": "real", "dimensions": { "width": 35, "depth": 35, "height": 160 }, "materials": ["metal"], "colors": ["negro", "blanco"], "styles": ["moderno", "industrial", "minimalista"], "price": { "min": 1200, "max": 1800 } },
+    { "id": "lampara_002", "name": "Lampara Washi", "category": "lampara", "kind": "real", "dimensions": { "width": 40, "depth": 40, "height": 150 }, "materials": ["madera", "tela"], "colors": ["beige"], "styles": ["japandi", "minimalista"], "price": { "min": 1500, "max": 2200 } },
+    { "id": "escritorio_001", "name": "Escritorio Forja", "category": "escritorio", "kind": "real", "dimensions": { "width": 140, "depth": 70, "height": 75 }, "materials": ["madera", "metal"], "colors": ["madera_oscura", "negro"], "styles": ["moderno", "industrial"], "price": { "min": 3000, "max": 4500 } },
+    { "id": "silla_oficina_001", "name": "Silla ergonomica", "category": "silla_oficina", "kind": "real", "dimensions": { "width": 60, "depth": 60, "height": 110 }, "materials": ["tela", "metal"], "colors": ["negro", "gris"], "styles": ["moderno", "industrial", "minimalista"], "price": { "min": 2500, "max": 3500 } },
+    { "id": "librero_001", "name": "Librero Altura", "category": "librero", "kind": "real", "dimensions": { "width": 80, "depth": 30, "height": 180 }, "materials": ["madera", "metal"], "colors": ["negro", "madera_oscura"], "styles": ["moderno", "industrial", "minimalista"], "price": { "min": 1800, "max": 2600 } },
+    { "id": "mesa_comedor_001", "name": "Mesa comedor 6 personas", "category": "mesa_comedor", "kind": "real", "dimensions": { "width": 160, "depth": 90, "height": 75 }, "materials": ["madera"], "colors": ["madera_clara", "madera_oscura"], "styles": ["moderno", "minimalista", "japandi", "clasico"], "price": { "min": 4500, "max": 6500 } },
+    { "id": "silla_comedor_001", "name": "Silla comedor Neo", "category": "silla_comedor", "kind": "real", "dimensions": { "width": 45, "depth": 50, "height": 90 }, "materials": ["madera", "tela"], "colors": ["beige", "gris"], "styles": ["moderno", "minimalista", "japandi", "clasico"], "price": { "min": 800, "max": 1200 } },
+    { "id": "isla_001", "name": "Isla de cocina", "category": "isla", "kind": "real", "dimensions": { "width": 120, "depth": 60, "height": 90 }, "materials": ["madera"], "colors": ["blanco", "madera_clara"], "styles": ["moderno", "minimalista", "japandi"], "price": { "min": 5000, "max": 7500 } },
+    { "id": "cuadro_001", "name": "Cuadro abstracto", "category": "cuadro", "kind": "real", "dimensions": { "width": 60, "depth": 3, "height": 80 }, "materials": ["madera"], "colors": ["beige", "gris"], "styles": ["moderno", "minimalista", "japandi"], "price": { "min": 500, "max": 900 } },
+    { "id": "planta_001", "name": "Planta interior", "category": "planta", "kind": "real", "dimensions": { "width": 30, "depth": 30, "height": 90 }, "materials": ["ceramica"], "colors": ["verde"], "styles": ["moderno", "minimalista", "japandi", "clasico"], "price": { "min": 300, "max": 600 } },
+    { "id": "concepto_001", "name": "Sillon conceptual (IA)", "category": "sillon", "kind": "conceptual", "dimensions": { "width": 90, "depth": 90, "height": 80 }, "materials": ["tela"], "colors": ["beige"], "styles": ["japandi"], "price": { "min": 0, "max": 0 } }
+  ],
+  "materials": [
+    { "id": "pintura_001", "type": "pintura", "name": "Pintura vinilica blanca", "pricePerM2": { "min": 60, "max": 100 } },
+    { "id": "piso_madera_001", "type": "madera", "name": "Piso laminado madera", "pricePerM2": { "min": 450, "max": 750 } },
+    { "id": "piso_ceramica_001", "type": "ceramica", "name": "Piso ceramico", "pricePerM2": { "min": 300, "max": 500 } },
+    { "id": "marmol_001", "type": "marmol", "name": "Marmol", "pricePerM2": { "min": 1200, "max": 2200 } },
+    { "id": "concreto_001", "type": "concreto", "name": "Concreto pulido", "pricePerM2": { "min": 600, "max": 900 } }
+  ],
+  "providers": [
+    { "id": "prov_muebles", "name": "Tienda de muebles", "budgetCategory": "muebles", "adapter": "json" },
+    { "id": "prov_electronica", "name": "Tienda de electronica", "budgetCategory": "electronica", "adapter": "json" },
+    { "id": "prov_iluminacion", "name": "Tienda de iluminacion", "budgetCategory": "iluminacion", "adapter": "csv" },
+    { "id": "prov_decoracion", "name": "Tienda de decoracion", "budgetCategory": "decoracion", "adapter": "csv" }
+  ]
+}

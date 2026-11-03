@@ -1,0 +1,118 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://iaproyect.local/schemas/room.schema.json",
+  "title": "Habitacion",
+  "description": "Geometria de la habitacion en planta. Origen (0,0) = esquina suroeste; x va a lo largo, y a lo ancho, z hacia arriba. Medidas en cm. El motor valida lo que el esquema no puede (puertas/ventanas dentro de su pared, columnas dentro del cuarto).",
+  "type": "object",
+  "required": ["id", "spaceType", "length", "width", "height", "doors", "windows"],
+  "additionalProperties": false,
+  "properties": {
+    "id": { "$ref": "common.schema.json#/$defs/id" },
+    "name": { "type": "string" },
+    "spaceType": { "$ref": "common.schema.json#/$defs/spaceType" },
+    "length": {
+      "description": "Largo en x (cm).",
+      "$ref": "common.schema.json#/$defs/cmPositive"
+    },
+    "width": {
+      "description": "Ancho en y (cm).",
+      "$ref": "common.schema.json#/$defs/cmPositive"
+    },
+    "height": {
+      "description": "Altura de piso a techo (cm).",
+      "$ref": "common.schema.json#/$defs/cmPositive"
+    },
+    "measurementSource": {
+      "$ref": "common.schema.json#/$defs/measurementSource",
+      "default": "medidas_usuario"
+    },
+    "doors": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/door" }
+    },
+    "windows": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/window" }
+    },
+    "columns": {
+      "description": "[SUPUESTO] Columnas como rectangulos en planta (usado sobre todo en comercial).",
+      "type": "array",
+      "items": { "$ref": "#/$defs/column" },
+      "default": []
+    },
+    "surfaces": {
+      "description": "Acabados actuales de piso, muros y techo.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "floor": { "$ref": "#/$defs/surface" },
+        "walls": { "$ref": "#/$defs/surface" },
+        "ceiling": { "$ref": "#/$defs/surface" }
+      }
+    },
+    "commercial": {
+      "description": "[SUPUESTO] Datos extra de inmueble comercial (caracteristica_inmueble en diseno.pl).",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "peopleCount": { "type": "integer", "minimum": 0 },
+        "workAreas": { "type": "integer", "minimum": 0 }
+      }
+    }
+  },
+  "$defs": {
+    "door": {
+      "type": "object",
+      "required": ["id", "wall", "position", "width"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "common.schema.json#/$defs/id" },
+        "wall": { "$ref": "common.schema.json#/$defs/wall" },
+        "position": {
+          "description": "Distancia desde el inicio de la pared (x en sur/norte, y en oeste/este), cm.",
+          "$ref": "common.schema.json#/$defs/cm"
+        },
+        "width": { "$ref": "common.schema.json#/$defs/cmPositive" }
+      }
+    },
+    "window": {
+      "type": "object",
+      "required": ["id", "wall", "position", "width", "sillHeight"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "common.schema.json#/$defs/id" },
+        "wall": { "$ref": "common.schema.json#/$defs/wall" },
+        "position": { "$ref": "common.schema.json#/$defs/cm" },
+        "width": { "$ref": "common.schema.json#/$defs/cmPositive" },
+        "sillHeight": {
+          "description": "Altura del antepecho desde el piso (cm).",
+          "$ref": "common.schema.json#/$defs/cm"
+        },
+        "height": {
+          "description": "Alto de la ventana (cm). Opcional; no lo usa diseno.pl.",
+          "$ref": "common.schema.json#/$defs/cmPositive"
+        }
+      }
+    },
+    "column": {
+      "type": "object",
+      "required": ["id", "x", "y", "width", "depth"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "common.schema.json#/$defs/id" },
+        "x": { "$ref": "common.schema.json#/$defs/cm" },
+        "y": { "$ref": "common.schema.json#/$defs/cm" },
+        "width": { "$ref": "common.schema.json#/$defs/cmPositive" },
+        "depth": { "$ref": "common.schema.json#/$defs/cmPositive" }
+      }
+    },
+    "surface": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "materialId": { "$ref": "common.schema.json#/$defs/id" },
+        "color": { "$ref": "common.schema.json#/$defs/color" }
+      }
+    }
+  }
+}

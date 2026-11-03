@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://iaproyect.local/schemas/common.schema.json",
+  "title": "Definiciones comunes",
+  "description": "Tipos compartidos por todos los esquemas. Medidas en cm enteros, precios en pesos MXN. Claves en ingles, valores en espanol sin acentos (igual que diseno.pl).",
+  "$defs": {
+    "id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]+$",
+      "minLength": 1,
+      "maxLength": 64
+    },
+    "cm": {
+      "description": "Longitud en centimetros (entero).",
+      "type": "integer",
+      "minimum": 0
+    },
+    "cmPositive": {
+      "description": "Longitud en centimetros mayor a cero.",
+      "type": "integer",
+      "minimum": 1
+    },
+    "priceRange": {
+      "description": "Rango de precio en MXN. El motor valida que min <= max.",
+      "type": "object",
+      "required": ["min", "max"],
+      "additionalProperties": false,
+      "properties": {
+        "min": { "type": "number", "minimum": 0 },
+        "max": { "type": "number", "minimum": 0 }
+      }
+    },
+    "projectType": {
+      "enum": ["comercial", "domestico"]
+    },
+    "spaceType": {
+      "enum": ["sala", "recamara", "cocina", "oficina", "comedor"]
+    },
+    "style": {
+      "enum": ["moderno", "minimalista", "industrial", "japandi", "clasico"]
+    },
+    "category": {
+      "enum": [
+        "sofa", "sillon", "mesa_centro", "mueble_tv", "cama", "escritorio",
+        "silla_oficina", "librero", "mesa_comedor", "silla_comedor", "isla",
+        "televisor", "lampara", "alfombra", "cuadro", "planta"
+      ]
+    },
+    "budgetCategory": {
+      "description": "Rubro de presupuesto.",
+      "enum": ["muebles", "electronica", "iluminacion", "decoracion", "materiales", "instalacion"]
+    },
+    "materialType": {
+      "enum": ["madera", "marmol", "concreto", "ceramica", "pintura", "tela", "metal", "vidrio"]
+    },
+    "color": {
+      "description": "Nombre de color en espanol, minusculas con guion bajo (ej. madera_clara).",
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$"
+    },
+    "structuralElement": {
+      "enum": ["muro", "columna", "puerta", "ventana"]
+    },
+    "wall": {
+      "description": "Pared. Sur: y=0, norte: y=ancho, oeste: x=0, este: x=largo.",
+      "enum": ["norte", "sur", "este", "oeste"]
+    },
+    "priority": {
+      "enum": ["obligatorio", "importante", "preferencia", "opcional"]
+    },
+    "budgetMode": {
+      "enum": ["minimizar", "ajustar", "flexible"]
+    },
+    "measurementSource": {
+      "description": "De donde salen las medidas. Fotografias = aproximada; medidas_usuario y planos = referencia.",
+      "enum": ["medidas_usuario", "planos", "fotografias"]
+    }
+  }
+}

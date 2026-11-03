@@ -1,0 +1,39 @@
+{
+  "schemaVersion": "1.0",
+  "project": { "id": "proyecto_ejemplo", "name": "Proyecto de ejemplo (diseno.pl)", "type": "domestico" },
+  "design": {
+    "id": "d4",
+    "name": "Diseno 4",
+    "parentId": null,
+    "style": "moderno",
+    "budgetMode": "ajustar",
+    "revision": 0
+  },
+  "room": {
+    "id": "h2",
+    "name": "Recamara",
+    "spaceType": "recamara",
+    "length": 400,
+    "width": 350,
+    "height": 270,
+    "measurementSource": "medidas_usuario",
+    "doors": [
+      { "id": "p2", "wall": "sur", "position": 20, "width": 80 }
+    ],
+    "windows": [
+      { "id": "v2", "wall": "este", "position": 100, "width": 120, "sillHeight": 90 }
+    ]
+  },
+  "requirements": [
+    { "id": "r1", "priority": "obligatorio", "type": "presupuesto_max", "amount": 20000 },
+    { "id": "r2", "priority": "obligatorio", "type": "tiene", "category": "cama", "attribute": "tamano", "value": "queen" },
+    { "id": "r3", "priority": "preferencia", "type": "estilo", "style": "moderno" }
+  ],
+  "objects": [
+    { "instanceId": "cama_d4", "catalogId": "cama_001", "type": "cama", "position": { "x": 120, "y": 60 }, "rotation": 0, "config": { "color": "beige" } },
+    { "instanceId": "lampara_d4", "catalogId": "lampara_001", "type": "lampara", "position": { "x": 300, "y": 280 }, "rotation": 0 }
+  ],
+  "materials": [],
+  "structuralConfirmations": [],
+  "history": []
+}

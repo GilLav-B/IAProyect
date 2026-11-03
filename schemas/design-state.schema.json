@@ -1,0 +1,297 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://iaproyect.local/schemas/design-state.schema.json",
+  "title": "DesignState",
+  "description": "Estado completo de UNA version de diseno. Es la fuente de verdad: imagenes y renders son solo representacion. Medidas en cm enteros (se muestran en m), precios en MXN. El esquema valida forma; el Design Engine valida reglas (colisiones, puertas, presupuesto...).",
+  "type": "object",
+  "required": ["schemaVersion", "project", "design", "room", "requirements", "objects"],
+  "additionalProperties": false,
+  "properties": {
+    "schemaVersion": { "const": "1.0" },
+    "project": { "$ref": "#/$defs/project" },
+    "design": { "$ref": "#/$defs/design" },
+    "room": { "$ref": "room.schema.json" },
+    "requirements": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/requirement" }
+    },
+    "objects": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/placedObject" }
+    },
+    "materials": {
+      "description": "Materiales aplicados (aplica_material en diseno.pl).",
+      "type": "array",
+      "items": { "$ref": "#/$defs/appliedMaterial" },
+      "default": []
+    },
+    "lighting": { "$ref": "#/$defs/lighting" },
+    "installation": {
+      "description": "Costo estimado de instalacion (rubro instalacion).",
+      "$ref": "common.schema.json#/$defs/priceRange"
+    },
+    "structuralConfirmations": {
+      "description": "Elementos estructurales que el usuario autorizo modificar explicitamente (confirmacion_usuario en diseno.pl).",
+      "type": "array",
+      "items": { "$ref": "common.schema.json#/$defs/structuralElement" },
+      "uniqueItems": true,
+      "default": []
+    },
+    "budget": { "$ref": "#/$defs/budgetSnapshot" },
+    "history": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/historyEntry" },
+      "default": []
+    }
+  },
+  "$defs": {
+    "project": {
+      "type": "object",
+      "required": ["id", "name", "type"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "common.schema.json#/$defs/id" },
+        "name": { "type": "string", "minLength": 1 },
+        "type": { "$ref": "common.schema.json#/$defs/projectType" }
+      }
+    },
+    "design": {
+      "description": "Datos de la version (pestana tipo Excel).",
+      "type": "object",
+      "required": ["id", "name", "style", "budgetMode", "revision"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "common.schema.json#/$defs/id" },
+        "name": { "type": "string", "minLength": 1 },
+        "parentId": {
+          "description": "Version de la que se duplico (version_padre). null si es la inicial.",
+          "oneOf": [
+            { "$ref": "common.schema.json#/$defs/id" },
+            { "type": "null" }
+          ],
+          "default": null
+        },
+        "style": { "$ref": "common.schema.json#/$defs/style" },
+        "budgetMode": { "$ref": "common.schema.json#/$defs/budgetMode" },
+        "revision": {
+          "description": "Contador de cambios dentro de esta version (sube en cada cambio guardado).",
+          "type": "integer",
+          "minimum": 0
+        },
+        "author": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" },
+        "favorite": { "type": "boolean", "default": false },
+        "comments": { "type": "string" },
+        "thumbnailUrl": { "type": "string" },
+        "renderUrl": { "type": "string" }
+      }
+    },
+    "requirement": {
+      "description": "Requisito del usuario con prioridad. 'type' indica la forma (igual que en diseno.pl).",
+      "type": "object",
+      "required": ["id", "priority", "type"],
+      "properties": {
+        "id": { "$ref": "common.schema.json#/$defs/id" },
+        "priority": { "$ref": "common.schema.json#/$defs/priority" },
+        "type": { "enum": ["presupuesto_max", "tiene", "conservar", "estilo", "color", "categoria"] },
+        "description": { "type": "string" }
+      },
+      "oneOf": [
+        {
+          "properties": {
+            "id": true, "priority": true, "description": true,
+            "type": { "const": "presupuesto_max" },
+            "amount": { "type": "number", "exclusiveMinimum": 0 }
+          },
+          "required": ["amount"],
+          "additionalProperties": false
+        },
+        {
+          "properties": {
+            "id": true, "priority": true, "description": true,
+            "type": { "const": "tiene" },
+            "category": { "$ref": "common.schema.json#/$defs/category" },
+            "attribute": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+            "value": { "type": ["string", "number"] }
+          },
+          "required": ["category", "attribute", "value"],
+          "additionalProperties": false
+        },
+        {
+          "properties": {
+            "id": true, "priority": true, "description": true,
+            "type": { "const": "conservar" },
+            "element": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" }
+          },
+          "required": ["element"],
+          "additionalProperties": false
+        },
+        {
+          "properties": {
+            "id": true, "priority": true, "description": true,
+            "type": { "const": "estilo" },
+            "style": { "$ref": "common.schema.json#/$defs/style" }
+          },
+          "required": ["style"],
+          "additionalProperties": false
+        },
+        {
+          "properties": {
+            "id": true, "priority": true, "description": true,
+            "type": { "const": "color" },
+            "category": { "$ref": "common.schema.json#/$defs/category" },
+            "color": { "$ref": "common.schema.json#/$defs/color" }
+          },
+          "required": ["category", "color"],
+          "additionalProperties": false
+        },
+        {
+          "properties": {
+            "id": true, "priority": true, "description": true,
+            "type": { "const": "categoria" },
+            "category": { "$ref": "common.schema.json#/$defs/category" }
+          },
+          "required": ["category"],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "placedObject": {
+      "description": "Objeto colocado. instanceId es unico y es el MISMO en catalogo, DesignState, Three.js y Blender.",
+      "type": "object",
+      "required": ["instanceId", "catalogId", "type", "position", "rotation"],
+      "additionalProperties": false,
+      "properties": {
+        "instanceId": { "$ref": "common.schema.json#/$defs/id" },
+        "catalogId": { "$ref": "common.schema.json#/$defs/id" },
+        "type": { "$ref": "common.schema.json#/$defs/category" },
+        "position": {
+          "description": "x,y = esquina suroeste de la huella en planta (igual que coloca/5 en diseno.pl); z = altura de la base sobre el piso. cm.",
+          "type": "object",
+          "required": ["x", "y"],
+          "additionalProperties": false,
+          "properties": {
+            "x": { "type": "integer" },
+            "y": { "type": "integer" },
+            "z": { "type": "integer", "minimum": 0, "default": 0 }
+          }
+        },
+        "rotation": {
+          "description": "[SUPUESTO] Grados alrededor del eje vertical. Por ahora solo multiplos de 90, como diseno.pl.",
+          "enum": [0, 90, 180, 270]
+        },
+        "scale": {
+          "description": "[SUPUESTO] Escala visual. Para productos reales debe ser 1 (dimensiones reales); el motor lo valida.",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "x": { "type": "number", "exclusiveMinimum": 0, "default": 1 },
+            "y": { "type": "number", "exclusiveMinimum": 0, "default": 1 },
+            "z": { "type": "number", "exclusiveMinimum": 0, "default": 1 }
+          }
+        },
+        "config": {
+          "description": "Configuracion elegida en el panel tipo configurador (config/4 en diseno.pl).",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "color": { "$ref": "common.schema.json#/$defs/color" },
+            "material": { "$ref": "common.schema.json#/$defs/materialType" }
+          }
+        },
+        "locked": {
+          "description": "Bloqueado por el usuario: la IA no lo puede mover, reemplazar ni quitar.",
+          "type": "boolean",
+          "default": false
+        }
+      }
+    },
+    "appliedMaterial": {
+      "type": "object",
+      "required": ["materialId", "areaM2"],
+      "additionalProperties": false,
+      "properties": {
+        "materialId": { "$ref": "common.schema.json#/$defs/id" },
+        "areaM2": {
+          "description": "Superficie en m2 (unica medida que no va en cm).",
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "surface": { "enum": ["piso", "muros", "techo"] }
+      }
+    },
+    "lighting": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "mode": { "enum": ["dia", "noche"], "default": "dia" },
+        "lights": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/light" },
+          "default": []
+        }
+      }
+    },
+    "light": {
+      "type": "object",
+      "required": ["id", "type"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "common.schema.json#/$defs/id" },
+        "type": { "enum": ["natural", "artificial"] },
+        "instanceId": {
+          "description": "Objeto (lampara) al que pertenece la luz, si aplica.",
+          "$ref": "common.schema.json#/$defs/id"
+        },
+        "temperature": {
+          "description": "calida=2700K, neutra=4000K, fria=6000K.",
+          "enum": ["calida", "neutra", "fria"]
+        },
+        "intensity": { "type": "number", "minimum": 0 },
+        "position": {
+          "type": "object",
+          "required": ["x", "y", "z"],
+          "additionalProperties": false,
+          "properties": {
+            "x": { "type": "integer" },
+            "y": { "type": "integer" },
+            "z": { "type": "integer" }
+          }
+        }
+      }
+    },
+    "budgetSnapshot": {
+      "description": "Lo CALCULA el motor. Si llega en una propuesta, se ignora y se recalcula.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "byCategory": {
+          "type": "object",
+          "propertyNames": { "$ref": "common.schema.json#/$defs/budgetCategory" },
+          "additionalProperties": { "$ref": "common.schema.json#/$defs/priceRange" }
+        },
+        "total": { "$ref": "common.schema.json#/$defs/priceRange" },
+        "effectiveCap": {
+          "description": "Tope efectivo (presupuesto_max, +10% en modo flexible).",
+          "type": "number"
+        }
+      }
+    },
+    "historyEntry": {
+      "type": "object",
+      "required": ["date", "description"],
+      "additionalProperties": false,
+      "properties": {
+        "date": { "type": "string", "format": "date-time" },
+        "author": { "type": "string" },
+        "description": { "type": "string" },
+        "changedInstanceIds": {
+          "type": "array",
+          "items": { "$ref": "common.schema.json#/$defs/id" }
+        },
+        "revision": { "type": "integer", "minimum": 0 }
+      }
+    }
+  }
+}

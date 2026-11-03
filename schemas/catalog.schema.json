@@ -1,0 +1,128 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://iaproyect.local/schemas/catalog.schema.json",
+  "title": "Catalogo",
+  "description": "Catalogo normalizado (producto/8, material/4, proveedor/3 y adaptador/2 en diseno.pl). Los adaptadores de cada proveedor convierten su formato a este.",
+  "type": "object",
+  "required": ["products"],
+  "additionalProperties": false,
+  "properties": {
+    "products": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/product" }
+    },
+    "materials": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/material" },
+      "default": []
+    },
+    "providers": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/provider" },
+      "default": []
+    }
+  },
+  "$defs": {
+    "product": {
+      "type": "object",
+      "required": ["id", "name", "category", "kind", "dimensions", "materials", "colors", "styles", "price"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "common.schema.json#/$defs/id" },
+        "name": { "type": "string", "minLength": 1 },
+        "category": { "$ref": "common.schema.json#/$defs/category" },
+        "kind": {
+          "description": "real = existe en un catalogo con datos comerciales; conceptual = lo propuso la IA, no se puede comprar.",
+          "enum": ["real", "conceptual"]
+        },
+        "dimensions": {
+          "description": "cm. width = x, depth = y (con rotacion 0), height = z.",
+          "type": "object",
+          "required": ["width", "depth", "height"],
+          "additionalProperties": false,
+          "properties": {
+            "width": { "$ref": "common.schema.json#/$defs/cmPositive" },
+            "depth": { "$ref": "common.schema.json#/$defs/cmPositive" },
+            "height": { "$ref": "common.schema.json#/$defs/cmPositive" }
+          }
+        },
+        "materials": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "common.schema.json#/$defs/materialType" }
+        },
+        "colors": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "common.schema.json#/$defs/color" }
+        },
+        "styles": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "$ref": "common.schema.json#/$defs/style" }
+        },
+        "price": { "$ref": "common.schema.json#/$defs/priceRange" },
+        "attributes": {
+          "description": "Atributos por categoria para filtrar requisitos (ej. pulgadas: 75, tamano: queen, plazas: 3).",
+          "type": "object",
+          "propertyNames": { "pattern": "^[a-z][a-z0-9_]*$" },
+          "additionalProperties": { "type": ["string", "number"] },
+          "default": {}
+        },
+        "providerId": { "$ref": "common.schema.json#/$defs/id" },
+        "sku": { "type": "string" },
+        "availability": { "enum": ["disponible", "agotado", "sobre_pedido", "desconocida"] },
+        "asset3D": {
+          "description": "Ruta o URL del modelo GLB/GLTF.",
+          "type": "string"
+        },
+        "images": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "variants": {
+          "description": "Variantes del mismo modelo (otro tamano o acabado) apuntando a otro producto.",
+          "type": "array",
+          "items": { "$ref": "common.schema.json#/$defs/id" }
+        }
+      },
+      "if": { "properties": { "kind": { "const": "conceptual" } } },
+      "then": {
+        "not": { "anyOf": [{ "required": ["sku"] }, { "required": ["providerId"] }] }
+      }
+    },
+    "material": {
+      "type": "object",
+      "required": ["id", "type", "name", "pricePerM2"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "common.schema.json#/$defs/id" },
+        "type": { "$ref": "common.schema.json#/$defs/materialType" },
+        "name": { "type": "string", "minLength": 1 },
+        "pricePerM2": { "$ref": "common.schema.json#/$defs/priceRange" },
+        "color": { "$ref": "common.schema.json#/$defs/color" },
+        "finish": { "type": "string" },
+        "texture": { "type": "string" },
+        "providerId": { "$ref": "common.schema.json#/$defs/id" },
+        "sku": { "type": "string" }
+      }
+    },
+    "provider": {
+      "type": "object",
+      "required": ["id", "name", "budgetCategory", "adapter"],
+      "additionalProperties": false,
+      "properties": {
+        "id": { "$ref": "common.schema.json#/$defs/id" },
+        "name": { "type": "string", "minLength": 1 },
+        "budgetCategory": { "$ref": "common.schema.json#/$defs/budgetCategory" },
+        "adapter": {
+          "description": "Formato del adaptador que normaliza sus datos.",
+          "enum": ["json", "csv"]
+        }
+      }
+    }
+  }
+}

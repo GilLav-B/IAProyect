@@ -1,0 +1,54 @@
+{
+  "schemaVersion": "1.0",
+  "project": { "id": "proyecto_ejemplo", "name": "Proyecto de ejemplo (diseno.pl)", "type": "domestico" },
+  "design": {
+    "id": "d3",
+    "name": "Diseno 3",
+    "parentId": "d1",
+    "style": "industrial",
+    "budgetMode": "ajustar",
+    "revision": 1
+  },
+  "room": {
+    "id": "h1",
+    "name": "Sala",
+    "spaceType": "sala",
+    "length": 520,
+    "width": 380,
+    "height": 270,
+    "measurementSource": "medidas_usuario",
+    "doors": [
+      { "id": "p1", "wall": "sur", "position": 50, "width": 90 }
+    ],
+    "windows": [
+      { "id": "v1", "wall": "norte", "position": 100, "width": 150, "sillHeight": 90 }
+    ]
+  },
+  "requirements": [
+    { "id": "r1", "priority": "obligatorio", "type": "presupuesto_max", "amount": 30000 },
+    { "id": "r2", "priority": "obligatorio", "type": "tiene", "category": "televisor", "attribute": "pulgadas", "value": 75 },
+    { "id": "r3", "priority": "obligatorio", "type": "conservar", "element": "piso" },
+    { "id": "r4", "priority": "preferencia", "type": "estilo", "style": "moderno" },
+    { "id": "r5", "priority": "preferencia", "type": "color", "category": "sofa", "color": "beige" },
+    { "id": "r6", "priority": "opcional", "type": "categoria", "category": "planta" }
+  ],
+  "objects": [
+    { "instanceId": "sofa_d3", "catalogId": "sofa_002", "type": "sofa", "position": { "x": 40, "y": 10 }, "rotation": 0, "config": { "color": "gris" } },
+    { "instanceId": "mesa_d3", "catalogId": "mesa_centro_001", "type": "mesa_centro", "position": { "x": 330, "y": 135 }, "rotation": 90 },
+    { "instanceId": "stand_d3", "catalogId": "mueble_tv_001", "type": "mueble_tv", "position": { "x": 480, "y": 100 }, "rotation": 90 },
+    { "instanceId": "tv_d3", "catalogId": "tv_75", "type": "televisor", "position": { "x": 490, "y": 106 }, "rotation": 90 },
+    { "instanceId": "lampara_d3", "catalogId": "lampara_001", "type": "lampara", "position": { "x": 60, "y": 300 }, "rotation": 0 }
+  ],
+  "materials": [],
+  "installation": { "min": 1500, "max": 2500 },
+  "structuralConfirmations": [],
+  "history": [
+    {
+      "date": "2026-10-01T00:00:00Z",
+      "author": "ejemplo",
+      "description": "duplicado de d1, estilo industrial, sofa Bergen",
+      "changedInstanceIds": ["sofa_d3"],
+      "revision": 1
+    }
+  ]
+}
