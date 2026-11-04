@@ -1,0 +1,76 @@
+.main {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 32px 16px 64px;
+}
+
+.main h1 {
+  margin: 0 0 4px;
+}
+
+.muted {
+  color: var(--muted);
+  font-weight: 400;
+}
+
+.error {
+  color: #c92a2a;
+}
+
+.project h2 {
+  font-size: 20px;
+  margin: 28px 0 12px;
+}
+
+.designs {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 12px;
+}
+
+.designCard {
+  display: block;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--card);
+  color: var(--text);
+  text-decoration: none;
+  transition: border-color 0.15s;
+}
+
+.designCard:hover {
+  border-color: var(--accent);
+}
+
+.designHead {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.total {
+  margin-top: 8px;
+  font-weight: 600;
+}
+
+.ok,
+.bad {
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
+.ok {
+  background: #d3f9d8;
+  color: #2b8a3e;
+}
+
+.bad {
+  background: #ffe3e3;
+  color: #c92a2a;
+}
