@@ -52,7 +52,8 @@ function elevations(objects: PlacedObject[], products: Map<string, Product>) {
       const s = rect(other, q);
       if (r.x1 < s.x2 && r.x2 > s.x1 && r.y1 < s.y2 && r.y2 > s.y1) top = Math.max(top, other.position.z + q.dimensions.height);
     }
-    if (p.category === "cuadro" && top === 0) top = PAINTING_CENTER_CM - p.dimensions.height / 2;
+    // El cuadro se cuelga a su altura; si hay un mueble debajo, queda al menos 10 cm por encima de el
+    if (p.category === "cuadro") top = Math.max(top + 10, PAINTING_CENTER_CM - p.dimensions.height / 2);
     result.set(o.instanceId, top);
   }
   return result;

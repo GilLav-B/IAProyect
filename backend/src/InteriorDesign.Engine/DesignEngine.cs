@@ -350,22 +350,64 @@ public class DesignEngine(CatalogState catalog, Rules? rules = null)
         if (blocking.Count > 0 || Product(catalogId) is not { } p)
             return (null, Verdict.From(blocking.Count > 0 ? blocking : probe.Reasons));
 
-        double cx = s.Room.Length / 2.0, cy = s.Room.Width / 2.0;
-        var candidates =
+        var grid =
             from rot in new[] { 0, 90, 180, 270 }
             let dims = Geometry.Rotated(rot, p.Dimensions.Width, p.Dimensions.Depth)
             from x in Enumerable.Range(0, Math.Max(0, (s.Room.Length - dims.A) / stepCm) + 1).Select(i => i * stepCm)
             from y in Enumerable.Range(0, Math.Max(0, (s.Room.Width - dims.B) / stepCm) + 1).Select(i => i * stepCm)
-            let dist = Math.Pow(x + dims.A / 2.0 - cx, 2) + Math.Pow(y + dims.B / 2.0 - cy, 2)
-            orderby dist, rot
-            select new AddProposal(instanceId, catalogId, x, y, rot);
+            select (Proposal: new AddProposal(instanceId, catalogId, x, y, rot), Score: PlacementScore(s.Room, p, x, y, rot, dims));
 
+        var candidates = PreferredSpots(s, instanceId, p).Concat(grid.OrderBy(c => c.Score).Select(c => c.Proposal));
         foreach (var c in candidates)
         {
             var v = Judge(s, c);
             if (v.Accepted) return (c, v);
         }
         return (null, Verdict.From([Term.A("sin_espacio_libre")]));
+    }
+
+    /// <summary>[SUPUESTO] como se acomoda cada categoria al agregarla.</summary>
+    private static readonly HashSet<string> AgainstWall = ["sofa", "cama", "mueble_tv", "librero", "escritorio", "cuadro"];
+    private static readonly HashSet<string> InCorner = ["planta", "lampara"];
+
+    /// <summary>
+    /// Puntaje de un lugar (menor = mejor). Contra la pared: la espalda pegada al muro que le toca segun su
+    /// rotacion (0 mira al sur -> espalda al norte; 90 al este -> espalda al oeste; 180 -> sur; 270 -> este),
+    /// centrado a lo largo del muro. En esquina: cerca de una esquina. Lo demas: cerca del centro.
+    /// </summary>
+    private static double PlacementScore(RoomState room, ProductState p, int x, int y, int rot, (int A, int B) dims)
+    {
+        double cx = x + dims.A / 2.0, cy = y + dims.B / 2.0;
+        if (AgainstWall.Contains(p.Category))
+        {
+            var (gap, along, wallMid) = rot switch
+            {
+                0 => (room.Width - (y + dims.B), cx, room.Length / 2.0),
+                90 => (x, cy, room.Width / 2.0),
+                180 => (y, cx, room.Length / 2.0),
+                _ => (room.Length - (x + dims.A), cy, room.Width / 2.0)
+            };
+            return gap * 10 + Math.Abs(along - wallMid);
+        }
+        if (InCorner.Contains(p.Category))
+        {
+            double dx = Math.Min(cx, room.Length - cx), dy = Math.Min(cy, room.Width - cy);
+            return dx * dx + dy * dy;
+        }
+        return Math.Pow(cx - room.Length / 2.0, 2) + Math.Pow(cy - room.Width / 2.0, 2);
+    }
+
+    /// <summary>La TV se propone primero centrada sobre un mueble de TV que ya este en el diseno.</summary>
+    private IEnumerable<AddProposal> PreferredSpots(DesignState s, string instanceId, ProductState p)
+    {
+        if (p.Category != "televisor") yield break;
+        foreach (var (obj, cabinet, rect) in Placed(s))
+        {
+            if (cabinet.Category != "mueble_tv") continue;
+            var (a, b) = Geometry.Rotated(obj.Rotation, p.Dimensions.Width, p.Dimensions.Depth);
+            int x = rect.X1 + (rect.X2 - rect.X1 - a) / 2, y = rect.Y1 + (rect.Y2 - rect.Y1 - b) / 2;
+            yield return new AddProposal(instanceId, p.Id, x, y, obj.Rotation);
+        }
     }
 
     // ---------------------------------------------------------------- similares y reemplazo

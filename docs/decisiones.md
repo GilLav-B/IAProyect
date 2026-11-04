@@ -56,5 +56,16 @@ Esto se aplica en la Fase 5 (`ai-rules/image-generator.md` y `safety-rules.md`) 
 - Espacios por tipo de proyecto como en `diseno.pl`: comercial = oficina; domestico = sala, recamara, cocina, comedor.
 - Los acabados (`surfaces`) son el estado ACTUAL del cuarto y son solo visuales: no suman al presupuesto. Los materiales de
   remodelacion con costo por m2 siguen en `materials` del DesignState (rubro materiales).
-- Agregar un mueble: el motor busca el primer lugar libre valido (rejilla de 10 cm, 4 rotaciones, del centro hacia afuera).
-  Si no se puede por presupuesto, categoria o falta de espacio, responde con los motivos.
+- Agregar un mueble: el motor busca el primer lugar libre valido (rejilla de 10 cm, 4 rotaciones). [SUPUESTO] Orden de
+  preferencia: sofa, cama, mueble TV, librero, escritorio y cuadro contra la pared y de espaldas a ella; plantas y lamparas
+  en esquinas; la TV sobre un mueble de TV si existe; lo demas al centro. Si no se puede por presupuesto, categoria o falta
+  de espacio, responde con los motivos.
+
+## Catalogo ampliado (2026-11-04)
+
+- `schemas/examples/catalog.json` = catalogo de `diseno.pl` (no se toca: las pruebas contra Prolog dependen de el).
+- `schemas/examples/catalog-extra.json` = 30 productos **[EJEMPLO]** aprobados por el usuario, con **precios estimados** en MXN
+  (no son de un proveedor real) y `availability: desconocida`. Se usan dentro de las 16 categorias de `diseno.pl`.
+- Al arrancar (Development) la API agrega a la BD los productos de ejemplo que falten y llena `asset3D`; no borra ni cambia
+  precios ni productos editados a mano.
+- Cuando haya proveedores reales, se reemplazan con un adaptador (json/csv) por proveedor.

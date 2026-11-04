@@ -38,17 +38,29 @@ public static class ExampleSeeder
     }
 
     /// <summary>
-    /// Llena el modelo 3D (asset3D) de los productos de ejemplo que aun no lo tienen.
-    /// No cambia nada mas ni pisa un modelo que ya se haya puesto a mano.
+    /// Sincroniza el catalogo de ejemplo (catalog.json de diseno.pl + catalog-extra.json ampliado) con la BD:
+    /// agrega los productos que falten y llena el modelo 3D (asset3D) que aun no tengan.
+    /// No borra ni cambia nada mas (ni precios ni productos editados a mano).
     /// </summary>
-    public static async Task<int> FillMissingAssetsAsync(InteriorDesignDbContext db, string schemasDir, CancellationToken ct = default)
+    public static async Task<(int Added, int Assets)> SyncExampleCatalogAsync(InteriorDesignDbContext db, string schemasDir, CancellationToken ct = default)
     {
-        var catalog = JsonSerializer.Deserialize<CatalogState>(
-            await File.ReadAllTextAsync(Path.Combine(schemasDir, "examples", "catalog.json"), ct), StateJson.Options)!;
-        var assets = catalog.Products.Where(p => p.Asset3D is not null).ToDictionary(p => p.Id, p => p.Asset3D!);
-        var products = await db.Products.Where(p => p.Asset3D == null && assets.Keys.Contains(p.Id)).ToListAsync(ct);
-        foreach (var p in products) p.Asset3D = assets[p.Id];
+        var products = new List<ProductState>();
+        foreach (var file in new[] { "catalog.json", "catalog-extra.json" })
+        {
+            var path = Path.Combine(schemasDir, "examples", file);
+            if (!File.Exists(path)) continue;
+            products.AddRange(JsonSerializer.Deserialize<CatalogState>(await File.ReadAllTextAsync(path, ct), StateJson.Options)!.Products);
+        }
+
+        var existing = await db.Products.Select(p => p.Id).ToHashSetAsync(ct);
+        var missing = products.Where(p => !existing.Contains(p.Id)).ToList();
+        db.Products.AddRange(missing.Select(StateMapper.ToEntity));
+
+        var assets = products.Where(p => p.Asset3D is not null).ToDictionary(p => p.Id, p => p.Asset3D!);
+        var withoutAsset = await db.Products.Where(p => p.Asset3D == null && assets.Keys.Contains(p.Id)).ToListAsync(ct);
+        foreach (var p in withoutAsset) p.Asset3D = assets[p.Id];
+
         await db.SaveChangesAsync(ct);
-        return products.Count;
+        return (missing.Count, withoutAsset.Count);
     }
 }

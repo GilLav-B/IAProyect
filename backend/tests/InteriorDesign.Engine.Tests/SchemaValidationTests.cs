@@ -59,11 +59,22 @@ public class SchemaValidationTests
         Assert.True(results.IsValid, $"{file} no valida:{Environment.NewLine}{Errors(results)}");
     }
 
-    [Fact]
-    public void Catalogo_de_diseno_pl_es_valido()
+    [Theory]
+    [InlineData("catalog.json")]
+    [InlineData("catalog-extra.json")]
+    public void Catalogos_de_ejemplo_son_validos(string file)
     {
-        var results = Evaluate(Catalog, Example("catalog.json"));
+        var results = Evaluate(Catalog, Example(file));
         Assert.True(results.IsValid, Errors(results));
+    }
+
+    [Fact]
+    public void Catalogo_ampliado_no_repite_ids_del_original()
+    {
+        var ids = Example("catalog.json")["products"]!.AsArray().Select(p => p!["id"]!.GetValue<string>()).ToHashSet();
+        var extra = Example("catalog-extra.json")["products"]!.AsArray().Select(p => p!["id"]!.GetValue<string>()).ToList();
+        Assert.Equal(extra.Count, extra.Distinct().Count());
+        Assert.DoesNotContain(extra, ids.Contains);
     }
 
     // ---------- Datos invalidos: el esquema debe rechazarlos ----------

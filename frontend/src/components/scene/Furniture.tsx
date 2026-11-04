@@ -10,6 +10,7 @@ import { ModelAsset } from "./furniture/ModelAsset";
 import {
   ArcLamp,
   Bed,
+  Bookshelf,
   DiningChair,
   GenericBox,
   KitchenIsland,
@@ -20,6 +21,7 @@ import {
   Sofa,
   Table,
   Television,
+  TvCabinet,
   type Size,
 } from "./furniture/Procedural";
 
@@ -61,6 +63,10 @@ function Model({ product, obj, size }: { product: Product; obj: PlacedObject; si
       return <DiningChair {...props} />;
     case "silla_oficina":
       return <OfficeChair {...props} />;
+    case "mueble_tv":
+      return <TvCabinet {...props} />;
+    case "librero":
+      return <Bookshelf {...props} />;
     default:
       return <GenericBox {...props} />;
   }

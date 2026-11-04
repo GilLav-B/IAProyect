@@ -277,8 +277,14 @@ public class ApiTests(ApiFixture fx) : IClassFixture<ApiFixture>
     [PostgresFact]
     public async Task Similares_alternativas_y_ahorros()
     {
-        var similar = (await Get("/api/catalog/products/sofa_001/similar")).AsArray().Select(p => p!["id"]!.GetValue<string>());
-        Assert.Equal(["sofa_003", "sofa_002"], similar);
+        // La BD tiene el catalogo de diseno.pl + el ampliado [EJEMPLO]: se revisa contenido y orden por precio
+        var similar = (await Get("/api/catalog/products/sofa_001/similar")).AsArray();
+        var ids = similar.Select(p => p!["id"]!.GetValue<string>()).ToList();
+        Assert.Contains("sofa_003", ids);
+        Assert.Contains("sofa_002", ids);
+        Assert.DoesNotContain("sofa_001", ids);
+        var prices = similar.Select(p => p!["price"]!["min"]!.GetValue<decimal>()).ToList();
+        Assert.Equal(prices.Order(), prices);
 
         var savings = (await Get("/api/designs/d2/savings")).AsArray();
         Assert.Equal("sofa_002", savings[0]!["suggestedCatalogId"]!.GetValue<string>());

@@ -54,8 +54,9 @@ using (var scope = app.Services.CreateScope())
     {
         if (await ExampleSeeder.SeedIfEmptyAsync(db, schemasDir))
             app.Logger.LogInformation("Se cargaron los datos de ejemplo (catalogo y d1-d4 de diseno.pl).");
-        if (await ExampleSeeder.FillMissingAssetsAsync(db, schemasDir) is > 0 and var n)
-            app.Logger.LogInformation("Se asignaron {N} modelos 3D a productos de ejemplo.", n);
+        var (added, assets) = await ExampleSeeder.SyncExampleCatalogAsync(db, schemasDir);
+        if (added + assets > 0)
+            app.Logger.LogInformation("Catalogo de ejemplo: {Added} productos agregados, {Assets} modelos 3D asignados.", added, assets);
     }
     var prolog = scope.ServiceProvider.GetRequiredService<PrologVerifier>();
     app.Logger.LogInformation("Verificador Prolog: {Estado}", prolog.Available ? "disponible" : "NO disponible (instala SWI-Prolog)");

@@ -26,6 +26,20 @@ const MODELS = [
   { id: "wooden_display_shelves_01" }, // librero
   { id: "metal_office_desk" }, // escritorio Forja
   { id: "potted_plant_01", simplify: 0.25 }, // planta (hojas muy densas)
+  // Catalogo ampliado [EJEMPLO] (schemas/examples/catalog-extra.json)
+  { id: "sofa_02" }, // sofa Chesterfield
+  { id: "Sofa_01" }, // sofa provenzal
+  { id: "mid_century_lounge_chair" }, // sillon lounge
+  { id: "modern_arm_chair_01" }, // sillon nordico
+  { id: "ArmChair_01" }, // sillon bergere
+  { id: "industrial_coffee_table" }, // mesa de centro forja
+  { id: "coffee_table_round_01" }, // mesa de centro redonda
+  { id: "modern_coffee_table_02" }, // mesa de centro calada
+  { id: "ClassicConsole_01" }, // consola clasica
+  { id: "steel_frame_shelves_03" }, // librero industrial
+  { id: "painted_wooden_chair_01" }, // silla de comedor
+  { id: "potted_plant_02", simplify: 0.3 }, // planta singonio
+  { id: "potted_plant_04", simplify: 0.3 }, // suculenta
 ];
 
 /** Texturas: [id, mapas]. Diffuse = color, nor_gl = relieve, Rough = rugosidad. */

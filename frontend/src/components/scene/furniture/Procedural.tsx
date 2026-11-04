@@ -346,6 +346,61 @@ export function OfficeChair({ size, color }: Props) {
   );
 }
 
+/** Mueble bajo de TV: cuerpo, frentes de cajon y patas delgadas. */
+export function TvCabinet({ size, color }: Props) {
+  const { w, d, h } = size;
+  const legH = Math.min(0.12, h * 0.2);
+  const bodyH = h - legH;
+  const doors = Math.max(2, Math.round(w / 0.55));
+  const doorW = (w - 0.04) / doors;
+  return (
+    <group>
+      {[[-1, -1], [1, -1], [-1, 1], [1, 1]].map(([sx, sz]) => (
+        <mesh key={`${sx}${sz}`} position={[sx * (w / 2 - 0.06), legH / 2, sz * (d / 2 - 0.05)]} castShadow>
+          <cylinderGeometry args={[0.012, 0.012, legH, 10]} />
+          <MetalMaterial color="negro" />
+        </mesh>
+      ))}
+      <RoundedBox args={[w, bodyH, d]} radius={0.01} position={[0, legH + bodyH / 2, 0]} castShadow receiveShadow>
+        <SurfaceMaterial color={color} />
+      </RoundedBox>
+      {Array.from({ length: doors }, (_, i) => (
+        <mesh key={i} position={[-w / 2 + 0.02 + doorW * (i + 0.5), legH + bodyH / 2, d / 2 + 0.002]}>
+          <planeGeometry args={[doorW - 0.012, bodyH - 0.04]} />
+          <meshStandardMaterial color="#000000" transparent opacity={0.06} />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
+/** Librero abierto: costados, fondo y repisas cada ~35 cm. */
+export function Bookshelf({ size, color }: Props) {
+  const { w, d, h } = size;
+  const t = 0.025;
+  const shelves = Math.max(2, Math.round(h / 0.35));
+  return (
+    <group>
+      {[-1, 1].map((s) => (
+        <mesh key={s} position={[s * (w / 2 - t / 2), h / 2, 0]} castShadow receiveShadow>
+          <boxGeometry args={[t, h, d]} />
+          <SurfaceMaterial color={color} />
+        </mesh>
+      ))}
+      <mesh position={[0, h / 2, -d / 2 + 0.005]} receiveShadow>
+        <boxGeometry args={[w, h, 0.01]} />
+        <SurfaceMaterial color={color} />
+      </mesh>
+      {Array.from({ length: shelves + 1 }, (_, i) => (
+        <mesh key={i} position={[0, Math.min(h - t / 2, t / 2 + (i * (h - t)) / shelves), 0]} castShadow receiveShadow>
+          <boxGeometry args={[w - 2 * t, t, d]} />
+          <SurfaceMaterial color={color} />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
 /** Respaldo generico: caja redondeada con el material elegido. */
 export function GenericBox({ size, color, material }: Props) {
   const { w, d, h } = size;
