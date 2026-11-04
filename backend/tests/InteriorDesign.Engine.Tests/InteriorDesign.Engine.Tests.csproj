@@ -21,6 +21,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\InteriorDesign.Infrastructure\InteriorDesign.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\src\InteriorDesign.Engine\InteriorDesign.Engine.csproj" />
+    <ProjectReference Include="..\..\src\InteriorDesign.PrologBridge\InteriorDesign.PrologBridge.csproj" />
   </ItemGroup>
 
 </Project>

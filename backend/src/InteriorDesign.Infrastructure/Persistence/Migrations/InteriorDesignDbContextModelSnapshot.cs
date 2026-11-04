@@ -364,6 +364,10 @@ namespace InteriorDesign.Infrastructure.Persistence.Migrations
                         .HasDefaultValue(1.0)
                         .HasColumnName("scale_z");
 
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer")
+                        .HasColumnName("sort_order");
+
                     b.Property<string>("Type")
                         .IsRequired()
                         .HasMaxLength(30)

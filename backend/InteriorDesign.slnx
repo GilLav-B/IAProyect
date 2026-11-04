@@ -1,9 +1,13 @@
 <Solution>
   <Folder Name="/src/">
+    <Project Path="src/InteriorDesign.Api/InteriorDesign.Api.csproj" />
     <Project Path="src/InteriorDesign.Domain/InteriorDesign.Domain.csproj" />
+    <Project Path="src/InteriorDesign.Engine/InteriorDesign.Engine.csproj" />
     <Project Path="src/InteriorDesign.Infrastructure/InteriorDesign.Infrastructure.csproj" />
+    <Project Path="src/InteriorDesign.PrologBridge/InteriorDesign.PrologBridge.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/InteriorDesign.Api.Tests/InteriorDesign.Api.Tests.csproj" />
     <Project Path="tests/InteriorDesign.Engine.Tests/InteriorDesign.Engine.Tests.csproj" />
   </Folder>
 </Solution>

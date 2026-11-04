@@ -55,6 +55,8 @@ public class DesignObject
     public string? Color { get; set; }
     public string? Material { get; set; }
     public bool Locked { get; set; }
+    /// <summary>Orden del objeto en el DesignState (el motor reporta en ese orden, como Prolog).</summary>
+    public int SortOrder { get; set; }
 
     public Design? Design { get; set; }
     public Product? Product { get; set; }
