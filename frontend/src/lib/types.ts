@@ -136,6 +136,7 @@ export interface DesignSummary {
   id: string;
   name: string;
   parentId?: string | null;
+  roomId: string;
   style: string;
   budgetMode: string;
   revision: number;
@@ -170,6 +171,43 @@ export type Proposal =
   | { action: "mover"; instanceId: string; x: number; y: number; rotation: number }
   | { action: "reemplazar"; instanceId: string; catalogId: string }
   | { action: "quitar"; instanceId: string };
+
+/** GET /api/designs/{id}/budget */
+export interface BudgetInfo {
+  designId: string;
+  budgetMode: "minimizar" | "ajustar" | "flexible";
+  budgetMax?: number;
+  effectiveCap?: number;
+  byCategory: Record<string, PriceRange>;
+  total: PriceRange;
+  status: "sin_tope" | "dentro" | "puede_excederse" | "excedido";
+}
+
+/** Reemplazo valido que ahorra dinero (sustitucion_ahorro/4). */
+export interface Saving {
+  instanceId: string;
+  currentCatalogId: string;
+  suggestedCatalogId: string;
+  suggestedName: string;
+  saving: number;
+}
+
+export interface HistoryEntry {
+  id: number;
+  date: string;
+  author?: string;
+  description: string;
+  changedInstanceIds: string[];
+  revision?: number;
+}
+
+export interface CompareResult {
+  a: string;
+  b: string;
+  differences: Reason[];
+  totalA: PriceRange;
+  totalB: PriceRange;
+}
 
 /** Habitacion + requisitos, como la manda y recibe /api/rooms. */
 export interface RoomWithRequirements {

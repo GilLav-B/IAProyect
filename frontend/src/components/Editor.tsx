@@ -4,9 +4,14 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { api, ApiError, API_URL } from "@/lib/api";
 import { describe } from "@/lib/reasons";
-import type { CatalogMaterial, DesignState, Move, MoveBatchResult, Product, Proposal, Reason, ValidationReport } from "@/lib/types";
+import type { BudgetInfo, CatalogMaterial, DesignState, HistoryEntry, Move, MoveBatchResult, Product, Proposal, Reason, Requirement, Saving, ValidationReport } from "@/lib/types";
 import { fmtM, fmtMoney, fmtRange, label } from "@/lib/units";
 import { AddFurniture } from "./AddFurniture";
+import { BudgetPanel } from "./BudgetPanel";
+import { DecisionBox, type Decision } from "./DecisionBox";
+import { HistoryPanel } from "./HistoryPanel";
+import { RequirementsPanel } from "./RequirementsPanel";
+import { VersionTabs } from "./VersionTabs";
 import { ConfigPanel } from "./ConfigPanel";
 import { Finishes } from "./Finishes";
 import { floorKindOf } from "./scene/materials";
@@ -37,6 +42,11 @@ export function Editor({ designId }: { designId: string }) {
   const [message, setMessage] = useState<Message | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [view, setView] = useState<ViewMode>("3d");
+  const [sideTab, setSideTab] = useState<"diseno" | "presupuesto" | "requisitos" | "historial">("diseno");
+  const [requirements, setRequirements] = useState<Requirement[]>([]);
+  const [budget, setBudget] = useState<BudgetInfo | null>(null);
+  /** Sube cuando cambia la habitacion (requisitos/acabados), que no cambia la revision del diseno. */
+  const [roomVersion, setRoomVersion] = useState(0);
   const checkSeq = useRef(0);
 
   const reload = useCallback(async () => {
@@ -60,6 +70,24 @@ export function Editor({ designId }: { designId: string }) {
       cancelled = true;
     };
   }, [designId]);
+
+  // Requisitos de la habitacion y presupuesto: se recargan con cada guardado o cambio de habitacion
+  const roomId = state?.room.id;
+  const revision = state?.design.revision;
+  useEffect(() => {
+    if (!roomId) return;
+    let cancelled = false;
+    Promise.all([api.room(roomId), api.budget(designId)])
+      .then(([room, b]) => {
+        if (cancelled) return;
+        setRequirements(room.requirements);
+        setBudget(b);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [designId, roomId, revision, roomVersion]);
 
   const moves: Move[] = useMemo(
     () => Object.entries(draft).map(([instanceId, m]) => ({ instanceId, ...m })),
@@ -235,7 +263,52 @@ export function Editor({ designId }: { designId: string }) {
     void run(async () => {
       const current = await api.room(state!.room.id);
       await api.updateRoom(current.room.id, { ...current, room: { ...current.room, surfaces: { ...current.room.surfaces, [part]: value } } });
+      setRoomVersion((v) => v + 1);
     }, part === "walls" ? `Muros: ${label(value.color ?? "")}` : "Piso actualizado");
+
+  /** Guarda los requisitos de la habitacion (aplica a todas sus versiones). */
+  const saveRequirements = (next: Requirement[], okText = "Requisitos guardados") =>
+    run(async () => {
+      const current = await api.room(state!.room.id);
+      await api.updateRoom(current.room.id, { room: current.room, requirements: next });
+      setRoomVersion((v) => v + 1);
+    }, okText);
+
+  const changeDesign = (patch: { budgetMode?: string; style?: string }, okText: string) =>
+    run(() => api.patchDesign(designId, patch), okText);
+
+  const revertTo = (entry: HistoryEntry) =>
+    run(() => api.revert(designId, entry.id), `Regreso a la revision ${entry.revision ?? ""}`);
+
+  const applySaving = (s: Saving) =>
+    void propose({ action: "reemplazar", instanceId: s.instanceId, catalogId: s.suggestedCatalogId }, `Ahorro aplicado: ${s.suggestedName}`);
+
+  /** El usuario decide que requisito gana en un conflicto. */
+  const decide = (d: Decision, text: string) => {
+    switch (d.kind) {
+      case "raise_budget":
+        void saveRequirements(
+          requirements.map((r) => (r.type === "presupuesto_max" ? { ...r, amount: d.amount } : r)),
+          text,
+        );
+        break;
+      case "flexible":
+        void changeDesign({ budgetMode: "flexible" }, text);
+        break;
+      case "show_savings":
+        setSideTab("presupuesto");
+        break;
+      case "add_product":
+        void addFurniture(d.catalogId);
+        break;
+      case "priority":
+        void saveRequirements(requirements.map((r) => (r.id === d.requirementId ? { ...r, priority: d.priority } : r)), text);
+        break;
+      case "style":
+        void changeDesign({ style: d.style }, text);
+        break;
+    }
+  };
 
   if (loadError)
     return (
@@ -281,7 +354,10 @@ export function Editor({ designId }: { designId: string }) {
           selectedId={selectedId}
           conflictIds={conflictIds}
           pendingIds={pendingIds}
-          onSelect={setSelectedId}
+          onSelect={(id) => {
+            setSelectedId(id);
+            if (id) setSideTab("diseno");
+          }}
           onBlocked={(id) => setMessage({ kind: "info", text: `${id} esta bloqueado. Desbloquealo para moverlo.` })}
           onDrag={(id, x, y) => updateDraft(id, { x, y })}
         />
@@ -297,6 +373,17 @@ export function Editor({ designId }: { designId: string }) {
           <span className={styles.swPending} /> sin guardar <span className={styles.swConflict} /> interfiere
         </div>
       </div>
+
+      <VersionTabs
+        projectId={state.project.id}
+        roomId={state.room.id}
+        currentId={designId}
+        revision={state.design.revision}
+        busy={busy || hasDraft}
+        onError={(text) => setMessage({ kind: "error", text })}
+        onRenamed={() => void reload()}
+        productName={(id) => productMap.get(id)?.name ?? id}
+      />
 
       <aside className={styles.sidebar}>
         {hasDraft && (
@@ -337,7 +424,54 @@ export function Editor({ designId }: { designId: string }) {
           </div>
         )}
 
-        {selected && selectedProduct ? (
+        <DecisionBox
+          conflicts={shownReport.conflicts}
+          requirements={requirements}
+          budget={budget}
+          products={products}
+          spaceType={state.room.spaceType}
+          busy={busy || hasDraft}
+          onDecide={decide}
+        />
+
+        <nav className={styles.sideTabs} role="tablist">
+          {(
+            [
+              ["diseno", "Diseno"],
+              ["presupuesto", "Presupuesto"],
+              ["requisitos", "Requisitos"],
+              ["historial", "Historial"],
+            ] as const
+          ).map(([key, text]) => (
+            <button key={key} type="button" role="tab" aria-selected={sideTab === key} className={sideTab === key ? styles.sideTabOn : undefined} onClick={() => setSideTab(key)}>
+              {text}
+            </button>
+          ))}
+        </nav>
+
+        {sideTab === "presupuesto" && (
+          <BudgetPanel
+            designId={designId}
+            revision={state.design.revision + roomVersion * 100000}
+            busy={busy || hasDraft}
+            onMode={(mode) => void changeDesign({ budgetMode: mode }, `Modo de presupuesto: ${mode}`)}
+            onApplySaving={applySaving}
+            productName={(id) => productMap.get(id)?.name ?? id}
+          />
+        )}
+        {sideTab === "requisitos" && (
+          <RequirementsPanel
+            key={roomVersion}
+            spaceType={state.room.spaceType}
+            requirements={requirements}
+            products={products}
+            busy={busy}
+            onSave={(next) => void saveRequirements(next)}
+          />
+        )}
+        {sideTab === "historial" && <HistoryPanel designId={designId} revision={state.design.revision} busy={busy || hasDraft} onRevert={(e) => void revertTo(e)} />}
+
+        {sideTab === "diseno" && (selected && selectedProduct ? (
           <ConfigPanel
             obj={selected}
             product={selectedProduct}
@@ -382,7 +516,7 @@ export function Editor({ designId }: { designId: string }) {
             <AddFurniture spaceType={state.room.spaceType} products={products} disabled={busy || hasDraft} onAdd={(id) => void addFurniture(id)} />
             <Finishes room={state.room} materials={materials} disabled={busy || hasDraft} onChange={changeFinish} />
           </>
-        )}
+        ))}
 
         <section className={styles.card}>
           <h3 className={styles.subtitle}>Validacion del motor{hasDraft ? " (como quedaria)" : ""}</h3>

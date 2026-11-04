@@ -1,9 +1,486 @@
 .layout {
   display: grid;
-  grid-template-columns: 1fr 360px;
-  grid-template-rows: auto 1fr;
+  grid-template-columns: 1fr 380px;
+  grid-template-rows: auto 1fr auto;
   height: 100dvh;
   background: var(--bg);
+}
+
+.layout > .sidebar {
+  grid-column: 2;
+  grid-row: 2 / span 2;
+}
+
+/* ---------- Pestanas de versiones (tipo Excel) ---------- */
+.tabsBar {
+  position: relative;
+  grid-column: 1;
+  grid-row: 3;
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  padding: 0 10px;
+  border-top: 1px solid var(--line);
+  background: #efece6;
+}
+
+.tabs {
+  display: flex;
+  gap: 2px;
+  overflow-x: auto;
+  flex: 1;
+  min-width: 0;
+}
+
+.tab,
+.tabOn {
+  display: flex;
+  border-radius: 0 0 8px 8px;
+  border: 1px solid var(--line);
+  border-top: 0;
+  background: #e4e0d8;
+  min-width: 0;
+}
+
+.tabOn {
+  background: var(--card);
+  box-shadow: inset 0 3px 0 var(--accent);
+}
+
+.tabButton {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  border: 0;
+  background: transparent;
+  padding: 6px 12px 7px;
+  font: inherit;
+  cursor: pointer;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.tabName {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.tabMeta {
+  font-size: 11px;
+  color: var(--muted);
+  text-transform: capitalize;
+}
+
+.tabInput {
+  margin: 6px;
+  font: inherit;
+  font-size: 13px;
+  padding: 4px 6px;
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  width: 160px;
+}
+
+.tabAdd {
+  border: 1px dashed var(--accent);
+  border-top: 0;
+  border-radius: 0 0 8px 8px;
+  background: transparent;
+  color: var(--accent);
+  padding: 0 12px;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.tabTools {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 0;
+}
+
+.tabTools select,
+.tabTools button {
+  font: inherit;
+  font-size: 12px;
+  padding: 5px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.comparePanel {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 10px;
+  width: min(520px, calc(100% - 20px));
+  max-height: 50vh;
+  overflow: auto;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+  z-index: 5;
+}
+
+.compareHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.compareHead button {
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.compareTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.compareTable th,
+.compareTable td {
+  text-align: left;
+  padding: 5px 6px;
+  border-bottom: 1px solid var(--line);
+}
+
+.compareTable th {
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.compareTotal td {
+  font-weight: 600;
+  border-bottom: 0;
+}
+
+/* ---------- Pestanas de la barra lateral ---------- */
+.sideTabs {
+  display: flex;
+  gap: 2px;
+  background: #ebe7df;
+  border-radius: 9px;
+  padding: 3px;
+}
+
+.sideTabs button {
+  flex: 1;
+  border: 0;
+  background: transparent;
+  padding: 7px 4px;
+  border-radius: 7px;
+  font: inherit;
+  font-size: 13px;
+  color: #495057;
+  cursor: pointer;
+}
+
+.sideTabs .sideTabOn {
+  background: var(--card);
+  color: var(--text);
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+/* ---------- Presupuesto ---------- */
+.budgetTotal {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 15px;
+}
+
+.bar {
+  position: relative;
+  height: 10px;
+  margin: 8px 0 12px;
+  background: #eeeae3;
+  border-radius: 999px;
+  overflow: visible;
+}
+
+.barFill,
+.barRange {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-radius: 999px;
+}
+
+.barFill {
+  left: 0;
+  background: #4dabf7;
+}
+
+.barRange {
+  background: repeating-linear-gradient(45deg, #a5d8ff, #a5d8ff 4px, #d0ebff 4px, #d0ebff 8px);
+}
+
+.barCap {
+  position: absolute;
+  top: -4px;
+  bottom: -4px;
+  width: 2px;
+  background: #c92a2a;
+}
+
+.rubros {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 12px;
+  display: grid;
+  gap: 6px;
+}
+
+.rubros li {
+  display: grid;
+  grid-template-columns: 82px 1fr auto;
+  gap: 8px;
+  align-items: center;
+  font-size: 12px;
+}
+
+.rubroName {
+  text-transform: capitalize;
+  color: var(--muted);
+}
+
+.rubroBar {
+  display: flex;
+  height: 7px;
+  background: #f1eee8;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.rubroBar span:first-child {
+  background: #74c0fc;
+}
+
+.rubroRange {
+  background: #d0ebff;
+}
+
+.rubroValue {
+  white-space: nowrap;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.savings,
+.savingsStrong {
+  border-radius: 8px;
+  padding: 10px;
+  font-size: 13px;
+}
+
+.savings {
+  background: #f8f9fa;
+  border: 1px solid var(--line);
+}
+
+.savingsStrong {
+  background: #ebfbee;
+  border: 1px solid #b2f2bb;
+}
+
+.savings ul,
+.savingsStrong ul {
+  list-style: none;
+  padding: 0;
+  margin: 6px 0;
+  display: grid;
+  gap: 6px;
+}
+
+.savings li,
+.savingsStrong li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.savings li button,
+.savingsStrong li button,
+.smallButton {
+  font: inherit;
+  font-size: 12px;
+  padding: 4px 9px;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--text);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.smallButton:disabled,
+.savings li button:disabled,
+.savingsStrong li button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.badgeWarn {
+  font-size: 12px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+  background: #fff3bf;
+  color: #8a6d00;
+}
+
+/* ---------- Historial ---------- */
+.history {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 6px;
+  max-height: 55vh;
+  overflow-y: auto;
+}
+
+.history li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.historyCurrent {
+  border-color: var(--accent) !important;
+  background: #f3f8fe;
+}
+
+.historyText {
+  font-family: var(--font-geist-mono), monospace;
+  font-size: 12px;
+  color: #495057;
+  word-break: break-word;
+}
+
+/* ---------- Requisitos ---------- */
+.reqList {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 10px;
+  display: grid;
+  gap: 6px;
+}
+
+.reqList li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  padding: 6px 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.reqText {
+  flex: 1;
+  min-width: 0;
+}
+
+.reqList select,
+.addReqGrid select {
+  font: inherit;
+  font-size: 12px;
+  padding: 4px 6px;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  background: var(--bg);
+}
+
+.reqAmount {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: 6px;
+}
+
+.reqAmount input {
+  width: 90px;
+  font: inherit;
+  font-size: 12px;
+  padding: 3px 6px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+}
+
+.addReq summary {
+  cursor: pointer;
+  color: var(--accent);
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+
+.addReqGrid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+/* ---------- Decision de conflictos ---------- */
+.decision {
+  border-radius: 10px;
+  padding: 12px;
+  background: #fff4e6;
+  border: 1px solid #ffd8a8;
+  font-size: 14px;
+  display: grid;
+  gap: 8px;
+}
+
+.decisionItem p {
+  margin: 0 0 6px;
+}
+
+.decisionOptions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.decisionOptions button {
+  font: inherit;
+  font-size: 13px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid #f08c00;
+  background: #fff;
+  color: #a35200;
+  cursor: pointer;
+}
+
+.decisionOptions button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .topbar {
@@ -520,12 +997,18 @@
 
 @media (max-width: 900px) {
   .layout {
-    grid-template-columns: 1fr;
-    grid-template-rows: auto 55dvh auto;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto 55dvh auto auto;
     height: auto;
   }
 
-  .sidebar {
+  .tabsBar {
+    flex-wrap: wrap;
+  }
+
+  .layout > .sidebar {
+    grid-column: 1;
+    grid-row: 4;
     border-left: 0;
     border-top: 1px solid var(--line);
   }

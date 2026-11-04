@@ -41,7 +41,7 @@ public static class ProjectEndpoints
             foreach (var did in designIds)
             {
                 var s = (await svc.Repo.GetStateAsync(did, ct))!;
-                summaries.Add(new DesignSummary(s.Design.Id, s.Design.Name, s.Design.ParentId, s.Design.Style,
+                summaries.Add(new DesignSummary(s.Design.Id, s.Design.Name, s.Design.ParentId, s.Room.Id, s.Design.Style,
                     s.Design.BudgetMode, s.Design.Revision, s.Design.Favorite, engine.IsValid(s), engine.BudgetTotal(s)));
             }
             return Results.Ok(new ProjectDto(p.Id, p.Name, p.Type, p.Rooms.Select(r => r.Id).OrderBy(x => x).ToList(), summaries));

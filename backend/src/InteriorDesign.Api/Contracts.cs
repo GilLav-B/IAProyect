@@ -95,7 +95,7 @@ public record MoveCheck(string InstanceId, VerdictDto Verdict);
 public record MoveBatchResult(bool Accepted, IReadOnlyList<MoveCheck> Results, ValidationReport Report, DesignState? State = null);
 
 public record DesignSummary(
-    string Id, string Name, string? ParentId, string Style, string BudgetMode, int Revision,
+    string Id, string Name, string? ParentId, string RoomId, string Style, string BudgetMode, int Revision,
     bool Favorite, bool Valid, PriceRange Total);
 
 public record ProjectRequest(string? Id, string Name, string Type);

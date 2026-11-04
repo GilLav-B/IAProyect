@@ -1,6 +1,10 @@
 import type {
   ApplyResult,
+  BudgetInfo,
   CatalogMaterial,
+  CompareResult,
+  HistoryEntry,
+  Saving,
   DesignState,
   RoomWithRequirements,
   Move,
@@ -99,6 +103,18 @@ export const api = {
       throw e;
     }
   },
+
+  budget: (id: string) => request<BudgetInfo>(`/api/designs/${id}/budget`),
+  savings: (id: string) => request<Saving[]>(`/api/designs/${id}/savings`),
+  history: (id: string) => request<HistoryEntry[]>(`/api/designs/${id}/history`),
+  revert: (id: string, historyId: number) =>
+    request<DesignState>(`/api/designs/${id}/history/${historyId}/revert`, { method: "POST" }),
+  duplicate: (id: string, name?: string) =>
+    request<DesignState>(`/api/designs/${id}/duplicate`, { method: "POST", body: JSON.stringify({ name }) }),
+  compare: (a: string, b: string) => request<CompareResult>(`/api/designs/${a}/compare/${b}`),
+  patchDesign: (id: string, patch: { name?: string; style?: string; budgetMode?: string; favorite?: boolean }) =>
+    request<ValidationReport>(`/api/designs/${id}`, { method: "PATCH", body: JSON.stringify(patch) }),
+  deleteDesign: (id: string) => request<null>(`/api/designs/${id}`, { method: "DELETE" }),
 
   lock: (id: string, instanceId: string, locked: boolean) =>
     request<PlacedObject>(`/api/designs/${id}/objects/${instanceId}/lock`, {

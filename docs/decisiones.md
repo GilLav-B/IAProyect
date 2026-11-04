@@ -61,6 +61,19 @@ Esto se aplica en la Fase 5 (`ai-rules/image-generator.md` y `safety-rules.md`) 
   en esquinas; la TV sobre un mueble de TV si existe; lo demas al centro. Si no se puede por presupuesto, categoria o falta
   de espacio, responde con los motivos.
 
+## Versiones, presupuesto, historial y conflictos (Fase 4, 2026-11-04)
+
+- Pestanas tipo Excel debajo del visor: cada version del mismo cuarto. Duplicar crea una copia independiente (la original
+  no cambia); doble clic o "Renombrar" cambia el nombre; "Comparar con..." muestra diferencias por categoria y presupuestos;
+  "Borrar" no permite quitar la unica version.
+- Presupuesto por rubro con rango min-max, linea del tope y estado (dentro / podria rebasarse / excedido).
+- Modos: minimizar (resalta los ahorros sugeridos), ajustar (aprovechar sin pasarse), flexible (+10% sobre el tope, como en
+  `diseno.pl`). Los ahorros son solo reemplazos que el motor valida (`sustitucion_ahorro/4`).
+- Historial: "Deshacer ultimo cambio" y "Volver aqui" en cualquier revision. Revertir no borra: queda como un cambio nuevo.
+- Requisitos editables (prioridad, monto del presupuesto, agregar/quitar). Aplican a todas las versiones de la habitacion.
+- Cuando hay `presupuesto_excedido` o `falta_requisito`, el usuario decide que gana: subir el tope, usar modo flexible, ver
+  ahorros, agregar el producto que falta, cambiar el estilo o bajar el requisito a preferencia. Nada se aplica solo.
+
 ## Catalogo ampliado (2026-11-04)
 
 - `schemas/examples/catalog.json` = catalogo de `diseno.pl` (no se toca: las pruebas contra Prolog dependen de el).
