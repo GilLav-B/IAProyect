@@ -125,6 +125,32 @@ public static class DesignEndpoints
             return Results.Ok(new ApplyResult(VerdictDto.From(verdict), saved, ValidationReport.From(x.Engine, saved)));
         }).WithSummary("Valida y, solo si es aceptada, aplica la propuesta y la guarda en el historial. Rechazada -> 409 con los motivos.");
 
+        g.MapPost("/{id}/proposals/moves", async (string id, MoveBatchRequest req, bool? dryRun, DesignService svc, CancellationToken ct) =>
+        {
+            if (req.Moves.Count == 0) return Results.BadRequest("No hay movimientos.");
+            if (req.Moves.Select(m => m.InstanceId).Distinct().Count() != req.Moves.Count)
+                return Results.BadRequest("Cada objeto puede aparecer una sola vez en el lote.");
+            if (req.Moves.Any(m => !DomainValues.Rotations.Contains(m.Rotation)))
+                return Results.BadRequest("rotation debe ser 0, 90, 180 o 270.");
+            if (await svc.LoadAsync(id, ct) is not { } x) return Results.NotFound();
+            var missing = req.Moves.Where(m => x.State.Objects.All(o => o.InstanceId != m.InstanceId)).Select(m => m.InstanceId).ToList();
+            if (missing.Count > 0) return Results.BadRequest($"No existen: {string.Join(", ", missing)}");
+
+            var moves = req.Moves.Select(m => new MoveProposal(m.InstanceId, m.X, m.Y, m.Rotation)).ToList();
+            var (final, results) = ProposalApplier.JudgeMoves(x.State, moves, x.Engine);
+            var accepted = results.All(r => r.Verdict.Accepted);
+            var checks = results.Select(r => new MoveCheck(r.Move.InstanceId, VerdictDto.From(r.Verdict))).ToList();
+            final.Budget = x.Engine.Budget(final);
+
+            if (dryRun == true) return Results.Ok(new MoveBatchResult(accepted, checks, ValidationReport.From(x.Engine, final)));
+            if (!accepted) return Results.Conflict(new MoveBatchResult(false, checks, ValidationReport.From(x.Engine, final)));
+
+            var description = moves.Count == 1 ? moves[0].ToTerm().ToString() : $"{moves.Count} movimientos: {string.Join(", ", moves.Select(m => m.ToTerm()))}";
+            var saved = await svc.Repo.SaveAsync(final, description, moves.Select(m => m.InstanceId), null, ct);
+            saved.Budget = x.Engine.Budget(saved);
+            return Results.Ok(new MoveBatchResult(true, checks, ValidationReport.From(x.Engine, saved), saved));
+        }).WithSummary("Lote de movimientos del editor. dryRun=true solo revisa (para pintar en vivo); sin dryRun guarda solo si TODOS son validos (si no, 409).");
+
         // ---------------- objetos ----------------
 
         g.MapPatch("/{id}/objects/{instanceId}/lock", async (string id, string instanceId, LockRequest req, DesignService svc, CancellationToken ct) =>

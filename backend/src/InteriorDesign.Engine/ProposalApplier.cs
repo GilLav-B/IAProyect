@@ -12,6 +12,30 @@ public static class ProposalApplier
     public static DesignState Clone(DesignState s) =>
         JsonSerializer.Deserialize<DesignState>(JsonSerializer.Serialize(s, StateJson.Options), StateJson.Options)!;
 
+    /// <summary>
+    /// Varios movimientos a la vez (borrador del editor). Se aplican todos y cada uno se juzga
+    /// contra el estado FINAL (los demas ya en su lugar nuevo), asi el orden no importa.
+    /// Solo se puede guardar si todos son aceptados.
+    /// </summary>
+    public static (DesignState Final, List<(MoveProposal Move, Verdict Verdict)> Results) JudgeMoves(
+        DesignState s, IReadOnlyList<MoveProposal> moves, DesignEngine engine)
+    {
+        var final = Clone(s);
+        final.Budget = null;
+        var results = new List<(MoveProposal, Verdict)>();
+        foreach (var m in moves)
+        {
+            var o = final.Objects.FirstOrDefault(x => x.InstanceId == m.InstanceId);
+            if (o is null) continue;
+            o.Position.X = m.X;
+            o.Position.Y = m.Y;
+            o.Rotation = m.Rotation;
+        }
+        foreach (var m in moves)
+            results.Add((m, engine.Judge(final, m)));
+        return (final, results);
+    }
+
     /// <summary>Devuelve la copia modificada y los instanceId que cambiaron.</summary>
     public static (DesignState State, List<string> Changed) Apply(DesignState s, Proposal proposal, DesignEngine engine)
     {

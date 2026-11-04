@@ -119,6 +119,21 @@ export interface ProjectDetail {
   designs: DesignSummary[];
 }
 
+/** Movimiento del borrador del editor (cm, grados). */
+export interface Move {
+  instanceId: string;
+  x: number;
+  y: number;
+  rotation: number;
+}
+
+export interface MoveBatchResult {
+  accepted: boolean;
+  results: { instanceId: string; verdict: Verdict }[];
+  report: ValidationReport;
+  state?: DesignState;
+}
+
 export type Proposal =
   | { action: "mover"; instanceId: string; x: number; y: number; rotation: number }
   | { action: "reemplazar"; instanceId: string; catalogId: string };

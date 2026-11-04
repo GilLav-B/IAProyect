@@ -1,16 +1,22 @@
 "use client";
 
-import type { PlacedObject, Product } from "@/lib/types";
+import { describe } from "@/lib/reasons";
+import type { PlacedObject, Product, Reason } from "@/lib/types";
 import { fmtM, fmtRange, label, rotatedDims } from "@/lib/units";
 import styles from "./Editor.module.css";
 
 interface Props {
+  /** Objeto como se ve ahora (con el borrador aplicado). */
   obj: PlacedObject;
   product: Product;
   /** Productos de la misma categoria, para cambiar de modelo. */
   models: Product[];
+  /** Motivos por los que su movimiento no se puede guardar. */
+  problems: Reason[];
+  /** Hay movimientos sin guardar: modelo, color, material y bloqueo esperan a que se guarden o descarten. */
+  hasDraft: boolean;
   busy: boolean;
-  onRotate: () => void;
+  onRotate: (delta: 90 | -90) => void;
   onReplace: (catalogId: string) => void;
   onColor: (color: string) => void;
   onMaterial: (material: string) => void;
@@ -18,10 +24,12 @@ interface Props {
 }
 
 /** Panel tipo configurador de vehiculos: modelo, color, material y precio del objeto seleccionado. */
-export function ConfigPanel({ obj, product, models, busy, onRotate, onReplace, onColor, onMaterial, onToggleLock }: Props) {
+export function ConfigPanel(p: Props) {
+  const { obj, product, models, problems, hasDraft, busy } = p;
   const [a, b] = rotatedDims(obj.rotation, product.dimensions.width, product.dimensions.depth);
   const color = obj.config?.color ?? product.colors[0];
   const material = obj.config?.material ?? product.materials[0];
+  const configLocked = busy || hasDraft;
 
   return (
     <section className={styles.card}>
@@ -36,10 +44,21 @@ export function ConfigPanel({ obj, product, models, busy, onRotate, onReplace, o
         </span>
       </header>
 
+      {problems.length > 0 && (
+        <div className={styles.msgError}>
+          <strong>Asi no se puede guardar</strong>
+          <ul>
+            {problems.map((r) => (
+              <li key={r.term}>{describe(r)}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       <dl className={styles.specs}>
         <dt>Modelo</dt>
         <dd>
-          <select value={product.id} disabled={busy || obj.locked} onChange={(e) => onReplace(e.target.value)}>
+          <select value={product.id} disabled={configLocked || obj.locked} onChange={(e) => p.onReplace(e.target.value)}>
             {models.map((m) => (
               <option key={m.id} value={m.id}>
                 {m.name}
@@ -50,7 +69,7 @@ export function ConfigPanel({ obj, product, models, busy, onRotate, onReplace, o
 
         <dt>Color</dt>
         <dd>
-          <select value={color} disabled={busy} onChange={(e) => onColor(e.target.value)}>
+          <select value={color} disabled={configLocked} onChange={(e) => p.onColor(e.target.value)}>
             {product.colors.map((c) => (
               <option key={c} value={c}>
                 {label(c)}
@@ -61,7 +80,7 @@ export function ConfigPanel({ obj, product, models, busy, onRotate, onReplace, o
 
         <dt>Material</dt>
         <dd>
-          <select value={material} disabled={busy} onChange={(e) => onMaterial(e.target.value)}>
+          <select value={material} disabled={configLocked} onChange={(e) => p.onMaterial(e.target.value)}>
             {product.materials.map((m) => (
               <option key={m} value={m}>
                 {label(m)}
@@ -88,15 +107,20 @@ export function ConfigPanel({ obj, product, models, busy, onRotate, onReplace, o
       </dl>
 
       <div className={styles.actions}>
-        <button type="button" onClick={onRotate} disabled={busy}>
-          Rotar 90°
+        <button type="button" onClick={() => p.onRotate(-90)} disabled={busy || obj.locked} title="Rotar a la izquierda (Shift+R)">
+          ⟲ 90°
         </button>
-        <button type="button" onClick={onToggleLock} disabled={busy} className={obj.locked ? styles.locked : undefined}>
-          {obj.locked ? "🔒 Bloqueado" : "🔓 Desbloqueado"}
+        <button type="button" onClick={() => p.onRotate(90)} disabled={busy || obj.locked} title="Rotar a la derecha (R)">
+          ⟳ 90°
+        </button>
+        <button type="button" onClick={p.onToggleLock} disabled={configLocked} className={obj.locked ? styles.locked : undefined}>
+          {obj.locked ? "🔒 Bloqueado" : "🔓 Libre"}
         </button>
       </div>
       <p className={styles.hint}>
-        Arrastra el objeto en la escena; al soltarlo el motor valida el movimiento. Bloqueado = la IA no lo puede cambiar.
+        Arrastra para mover (Shift = ajuste fino de 1 cm). R / Shift+R rota. Puedes atravesar otros muebles mientras acomodas; solo
+        no te deja guardar si algo interfiere.
+        {hasDraft && " Modelo, color, material y bloqueo se cambian despues de guardar o descartar los movimientos."}
       </p>
     </section>
   );

@@ -39,7 +39,7 @@ function Zone({ rect, color }: { rect: PlanRect; color: string }) {
 }
 
 /** Piso, muros, puertas y ventanas. Son estructurales: no se seleccionan ni se mueven. */
-export function RoomShell({ room, onFloorClick }: { room: Room; onFloorClick?: () => void }) {
+export function RoomShell({ room }: { room: Room }) {
   const L = cmToM(room.length);
   const W = cmToM(room.width);
   const H = cmToM(room.height);
@@ -58,10 +58,6 @@ export function RoomShell({ room, onFloorClick }: { room: Room; onFloorClick?: (
         position={[L / 2, 0, -W / 2]}
         rotation-x={-Math.PI / 2}
         receiveShadow
-        onClick={(e) => {
-          e.stopPropagation();
-          onFloorClick?.();
-        }}
       >
         <planeGeometry args={[L, W]} />
         <meshStandardMaterial color="#d8d2c6" />

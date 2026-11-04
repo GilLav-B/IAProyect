@@ -128,6 +128,35 @@ public class DesignEngineTests
         Assert.Equal("[dif(sofa,sofa_003,sofa_001)]", Str(Engine.Compare(States.D1, States.D2)));
     }
 
+    // ---------- Lote de movimientos (borrador del editor) ----------
+
+    [Fact]
+    public void Intercambiar_sofa_y_mesa_se_valida_contra_el_estado_final()
+    {
+        var d1 = States.D1;
+        var sofa = new MoveProposal("sofa_d1", 320, 110, 90);
+        var mesa = new MoveProposal("mesa_d1", 180, 135, 90);
+
+        // Uno por uno chocan con la posicion vieja del otro
+        Assert.Equal("rechazada([colision_con(mesa_d1)])", Engine.Judge(d1, sofa).ToString());
+        Assert.Equal("rechazada([colision_con(sofa_d1)])", Engine.Judge(d1, mesa).ToString());
+
+        // Juntos quedan bien: cada uno se juzga con el otro ya movido
+        var (final, results) = ProposalApplier.JudgeMoves(d1, [sofa, mesa], Engine);
+        Assert.All(results, r => Assert.True(r.Verdict.Accepted, r.Verdict.ToString()));
+        Assert.Equal(320, final.Objects.Single(o => o.InstanceId == "sofa_d1").Position.X);
+        Assert.Equal(180, States.D1.Objects.Single(o => o.InstanceId == "sofa_d1").Position.X);
+    }
+
+    [Fact]
+    public void Lote_con_un_movimiento_invalido_no_se_acepta()
+    {
+        var (_, results) = ProposalApplier.JudgeMoves(States.D1,
+            [new MoveProposal("lampara_d1", 120, 345, 0), new MoveProposal("tv_d1", 300, 100, 0)], Engine);
+        Assert.Equal("rechazada([bloquea_ventana(v1)])", results[0].Verdict.ToString());
+        Assert.Equal("rechazada([elemento_bloqueado(tv_d1)])", results[1].Verdict.ToString());
+    }
+
     [Fact]
     public void Accion_sobre_objeto_inexistente_es_accion_invalida()
     {

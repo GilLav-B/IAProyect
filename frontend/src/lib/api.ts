@@ -1,6 +1,8 @@
 import type {
   ApplyResult,
   DesignState,
+  Move,
+  MoveBatchResult,
   PlacedObject,
   Product,
   ProjectDetail,
@@ -49,6 +51,27 @@ export const api = {
       return { ok: true, result };
     } catch (e) {
       if (e instanceof ApiError && e.status === 409) return { ok: false, verdict: e.body as Verdict };
+      throw e;
+    }
+  },
+
+  /** Revisa el borrador sin guardar (para pintar conflictos en vivo). */
+  checkMoves: (id: string, moves: Move[]) =>
+    request<MoveBatchResult>(`/api/designs/${id}/proposals/moves?dryRun=true`, {
+      method: "POST",
+      body: JSON.stringify({ moves }),
+    }),
+
+  /** Guarda el borrador solo si todos los movimientos son validos; si no, 409 con los motivos. */
+  async saveMoves(id: string, moves: Move[]): Promise<{ ok: boolean; result: MoveBatchResult }> {
+    try {
+      const result = await request<MoveBatchResult>(`/api/designs/${id}/proposals/moves`, {
+        method: "POST",
+        body: JSON.stringify({ moves }),
+      });
+      return { ok: true, result };
+    } catch (e) {
+      if (e instanceof ApiError && e.status === 409) return { ok: false, result: e.body as MoveBatchResult };
       throw e;
     }
   },

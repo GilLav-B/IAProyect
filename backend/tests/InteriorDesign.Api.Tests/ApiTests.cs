@@ -151,6 +151,36 @@ public class ApiTests(ApiFixture fx) : IClassFixture<ApiFixture>
     }
 
     [PostgresFact]
+    public async Task Lote_de_movimientos_revisa_y_solo_guarda_si_todo_es_valido()
+    {
+        var copy = await Duplicate("d1");
+        var swap = new { moves = new object[]
+        {
+            new { instanceId = "sofa_d1", x = 320, y = 110, rotation = 90 },
+            new { instanceId = "mesa_d1", x = 180, y = 135, rotation = 90 },
+        } };
+
+        // dryRun: revisa sin guardar
+        var check = JsonNode.Parse(await (await Post($"/api/designs/{copy}/proposals/moves?dryRun=true", swap)).Content.ReadAsStringAsync())!;
+        Assert.True(check["accepted"]!.GetValue<bool>());
+        Assert.Null(check["state"]);
+        Assert.Equal(0, (await Get($"/api/designs/{copy}"))["design"]!["revision"]!.GetValue<int>());
+
+        // Guardar: aplica los dos en un solo cambio del historial
+        var saved = await Post($"/api/designs/{copy}/proposals/moves", swap);
+        Assert.Equal(HttpStatusCode.OK, saved.StatusCode);
+        var state = JsonNode.Parse(await saved.Content.ReadAsStringAsync())!["state"]!;
+        Assert.Equal(320, state["objects"]!.AsArray().Single(o => o!["instanceId"]!.GetValue<string>() == "sofa_d1")!["position"]!["x"]!.GetValue<int>());
+        Assert.Equal(2, (await Get($"/api/designs/{copy}/history")).AsArray().Count);
+
+        // Si algo interfiere no se guarda nada
+        var bad = await Post($"/api/designs/{copy}/proposals/moves",
+            new { moves = new object[] { new { instanceId = "lampara_d1", x = 120, y = 345, rotation = 0 } } });
+        Assert.Equal(HttpStatusCode.Conflict, bad.StatusCode);
+        Assert.Equal(2, (await Get($"/api/designs/{copy}/history")).AsArray().Count);
+    }
+
+    [PostgresFact]
     public async Task Bloquear_desbloquear_y_configurar_color()
     {
         var copy = await Duplicate("d1");

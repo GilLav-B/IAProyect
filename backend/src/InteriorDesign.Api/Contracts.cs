@@ -78,6 +78,19 @@ public record VerdictDto(bool Accepted, string Verdict, IReadOnlyList<ReasonDto>
 
 public record ApplyResult(VerdictDto Verdict, DesignState State, ValidationReport Report);
 
+/// <summary>Movimiento del borrador del editor (cm y grados).</summary>
+public record MoveDto(string InstanceId, int X, int Y, int Rotation);
+
+public record MoveBatchRequest(List<MoveDto> Moves);
+
+public record MoveCheck(string InstanceId, VerdictDto Verdict);
+
+/// <summary>
+/// Resultado del lote. Accepted = todos los movimientos son validos (se puede guardar).
+/// Report es la validacion completa del diseno como quedaria. State solo viene cuando se guardo.
+/// </summary>
+public record MoveBatchResult(bool Accepted, IReadOnlyList<MoveCheck> Results, ValidationReport Report, DesignState? State = null);
+
 public record DesignSummary(
     string Id, string Name, string? ParentId, string Style, string BudgetMode, int Revision,
     bool Favorite, bool Valid, PriceRange Total);
