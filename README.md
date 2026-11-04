@@ -132,6 +132,28 @@ Despues de editar el archivo, recarga con:
 - Base de conocimiento cargada y probada con `?- pruebas.` en SWI-Prolog 9.0.4.
 - Solo `sofa_001`, la habitacion de 5.20 x 3.80 x 2.70 m y el presupuesto de $30,000 provienen del documento. El resto del catalogo, precios y proveedores son datos de ejemplo.
 
+## Avance del prototipo (capturas)
+
+Asi se ve hoy la plataforma web (backend .NET + frontend Next.js con React Three Fiber). Cada cambio que se hace en el
+editor 3D pasa por el motor de validacion, que da los mismos resultados que `diseno.pl`.
+
+**Editor 3D** - sala de `d3`: muebles con medidas reales, sombras y luz natural; a la derecha, la lista de objetos y la
+validacion del motor (advertencias de presupuesto y requisitos).
+
+![Editor 3D en perspectiva](docs/img/editor-3d.png)
+
+**Vista de planta** - mismo diseno visto desde arriba, con el sofa seleccionado y su panel de configuracion (modelo, color,
+material, precio, medidas, posicion y rotacion). Se ven las zonas de la puerta (naranja) y del acceso a la ventana (azul).
+
+![Editor en vista de planta](docs/img/editor-planta.webp)
+
+**Inicio** - proyectos y sus versiones de diseno, con estilo, modo de presupuesto, rango de precio y si son validas.
+
+![Pagina de inicio con proyectos y versiones](docs/img/inicio-proyectos.png)
+
+> En la captura de planta aparece el aviso "No se pudo conectar con la API": en ese momento el backend se estaba
+> reiniciando. Con la API corriendo (`dotnet run --project backend/src/InteriorDesign.Api`) el aviso no aparece.
+
 ## Pendientes
 
 - Definir "Geometria y caracteristicas del inmueble" del proyecto comercial (hay una propuesta en `caracteristica_inmueble/2`).
