@@ -396,7 +396,7 @@ namespace InteriorDesign.Infrastructure.Persistence.Migrations
                         {
                             t.HasCheckConstraint("ck_design_objects_material", "material IS NULL OR material IN ('madera', 'marmol', 'concreto', 'ceramica', 'pintura', 'tela', 'metal', 'vidrio')");
 
-                            t.HasCheckConstraint("ck_design_objects_rotation", "rotation IN (0, 90, 180, 270)");
+                            t.HasCheckConstraint("ck_design_objects_rotation", "rotation >= 0 AND rotation <= 359");
 
                             t.HasCheckConstraint("ck_design_objects_scale", "scale_x > 0 AND scale_y > 0 AND scale_z > 0");
 

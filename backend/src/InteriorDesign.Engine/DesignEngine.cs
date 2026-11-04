@@ -23,7 +23,7 @@ public class DesignEngine(CatalogState catalog, Rules? rules = null)
     // ---------------------------------------------------------------- utilidades
 
     /// <summary>Objetos cuyo producto existe en el catalogo, con su huella (huella/3).</summary>
-    private IEnumerable<(PlacedObject Obj, ProductState Product, Rect Rect)> Placed(DesignState s) =>
+    private IEnumerable<(PlacedObject Obj, ProductState Product, Footprint Rect)> Placed(DesignState s) =>
         from o in s.Objects
         let p = Product(o.CatalogId)
         where p is not null
@@ -168,8 +168,8 @@ public class DesignEngine(CatalogState catalog, Rules? rules = null)
         var floor = room.Length * room.Width;
         if (floor > 0 && (decimal)occupied / floor > _rules.MaxOccupancy)
             result.Add(Term.C("exceso_muebles", occupied % floor == 0
-                ? Term.N(occupied / floor)
-                : Term.F((double)occupied / floor)));
+                ? Term.N((decimal)(occupied / floor))
+                : Term.F(occupied / floor)));
 
         foreach (var (o, p, _) in placed)
             if (!_rules.CategoryAllowed(room.SpaceType, p.Category))
@@ -405,7 +405,8 @@ public class DesignEngine(CatalogState catalog, Rules? rules = null)
         {
             if (cabinet.Category != "mueble_tv") continue;
             var (a, b) = Geometry.Rotated(obj.Rotation, p.Dimensions.Width, p.Dimensions.Depth);
-            int x = rect.X1 + (rect.X2 - rect.X1 - a) / 2, y = rect.Y1 + (rect.Y2 - rect.Y1 - b) / 2;
+            var box = rect.Bounds;
+            int x = box.X1 + (box.X2 - box.X1 - a) / 2, y = box.Y1 + (box.Y2 - box.Y1 - b) / 2;
             yield return new AddProposal(instanceId, p.Id, x, y, obj.Rotation);
         }
     }

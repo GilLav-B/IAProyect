@@ -88,7 +88,8 @@ public class SchemaValidationTests
 
     public static TheoryData<string, Action<JsonNode>> DesignStateInvalido => new()
     {
-        { "rotacion no multiplo de 90", n => n["objects"]![0]!["rotation"] = 45 },
+        { "rotacion fuera de 0-359", n => n["objects"]![0]!["rotation"] = 360 },
+        { "rotacion con decimales", n => n["objects"]![0]!["rotation"] = 12.5 },
         { "posicion en decimales (no cm enteros)", n => n["objects"]![0]!["position"]!["x"] = 180.5 },
         { "objeto sin instanceId", n => n["objects"]![0]!.AsObject().Remove("instanceId") },
         { "categoria inexistente", n => n["objects"]![0]!["type"] = "tele" },

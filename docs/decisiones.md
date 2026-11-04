@@ -74,6 +74,34 @@ Esto se aplica en la Fase 5 (`ai-rules/image-generator.md` y `safety-rules.md`) 
 - Cuando hay `presupuesto_excedido` o `falta_requisito`, el usuario decide que gana: subir el tope, usar modo flexible, ver
   ahorros, agregar el producto que falta, cambiar el estilo o bajar el requisito a preferencia. Nada se aplica solo.
 
+## Rotacion libre (2026-11-04)
+
+- Los muebles giran a cualquier angulo entero de 0 a 359 (antihorario visto desde arriba). Antes solo 0/90/180/270.
+- En el editor: clic derecho sobre el mueble y mover en circulo (de 5 en 5 grados; Shift = 1 grado). R / Shift+R gira 90.
+  En el panel se puede escribir el angulo exacto. El mueble gira sobre su centro.
+- La posicion (x,y) sigue siendo la esquina suroeste de la caja envolvente de la huella (con 0/90/180/270 es exactamente
+  la de `diseno.pl`).
+- Motor: con multiplos de 90 la huella es el mismo rectangulo de `diseno.pl` (equivalencia con Prolog intacta). Con otros
+  angulos es un rectangulo girado; los choques se calculan con el teorema del eje separador y "dentro del cuarto" revisa
+  las 4 esquinas.
+- `diseno.pl` solo modela 90 grados: el verificador Prolog en ejecucion responde "no aplica" cuando hay angulos libres; ahi la
+  validacion la hace solo el motor en C# (que siempre es el que decide).
+- BD: migracion `FreeRotation` (CHECK rotation entre 0 y 359). Esquema: `rotation` entero 0-359.
+
+## Requisito para la Fase 5: acomodar segun un diseno de referencia (2026-11-04)
+
+Pedido por el usuario: subir una imagen de un diseno de internet (foto de una sala, recamara, etc.) y que la IA acomode el
+espacio del usuario siguiendo ese diseno. Propuesta de flujo (se confirma al llegar a la Fase 5):
+
+1. El usuario sube la imagen de referencia (y opcionalmente un texto: "quiero algo asi").
+2. n8n -> IA de vision (API de OpenAI del usuario): describe estilo, paleta de colores, materiales, tipo y cantidad de
+   muebles y su distribucion relativa (ej. "sofa contra la pared frente a la TV, alfombra al centro").
+3. La IA propone un DesignState en JSON usando SOLO productos del catalogo (o conceptuales marcados como tales),
+   respetando las medidas reales del cuarto del usuario.
+4. El motor valida cada propuesta (agregar/mover/reemplazar). Lo rechazado se corrige o se le explica al usuario.
+5. Se crea una version nueva ("Basado en referencia") para no tocar las existentes; el usuario decide si la conserva.
+6. La imagen de referencia y cualquier imagen generada son solo ayuda visual (ver la seccion de imagenes).
+
 ## Catalogo ampliado (2026-11-04)
 
 - `schemas/examples/catalog.json` = catalogo de `diseno.pl` (no se toca: las pruebas contra Prolog dependen de el).

@@ -85,7 +85,7 @@ public class PostgresMigrationTests
         await context.Database.EnsureDeletedAsync();
         await context.Database.MigrateAsync();
 
-        // Rotacion de 45 grados: la rechaza el CHECK ck_design_objects_rotation
+        // Rotacion de 400 grados: la rechaza el CHECK ck_design_objects_rotation (0-359)
         await context.Database.ExecuteSqlRawAsync(
             "INSERT INTO projects (id, name, type) VALUES ('p', 'P', 'domestico');" +
             "INSERT INTO rooms (id, project_id, space_type, length_cm, width_cm, height_cm) VALUES ('h', 'p', 'sala', 500, 400, 270);" +
@@ -96,7 +96,7 @@ public class PostgresMigrationTests
 
         var ex = await Assert.ThrowsAsync<PostgresException>(() => context.Database.ExecuteSqlRawAsync(
             "INSERT INTO design_objects (design_id, instance_id, catalog_id, type, x_cm, y_cm, z_cm, rotation, locked) " +
-            "VALUES ('d', 'o', 'x', 'sofa', 0, 0, 0, 45, false);"));
+            "VALUES ('d', 'o', 'x', 'sofa', 0, 0, 0, 400, false);"));
         Assert.Equal("ck_design_objects_rotation", ex.ConstraintName);
 
         // Producto conceptual con SKU

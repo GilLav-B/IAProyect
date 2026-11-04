@@ -750,6 +750,22 @@
   color: #c92a2a !important;
 }
 
+.angle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.angle input {
+  width: 70px;
+  font: inherit;
+  font-size: 14px;
+  padding: 4px 6px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--bg);
+}
+
 .price {
   font-weight: 600;
 }

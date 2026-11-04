@@ -51,8 +51,7 @@ internal class DesignObjectConfiguration : IEntityTypeConfiguration<DesignObject
         b.ToTable("design_objects", t =>
         {
             t.HasCheckConstraint("ck_design_objects_type", Check.In("type", DomainValues.Categories));
-            t.HasCheckConstraint("ck_design_objects_rotation",
-                $"rotation IN ({string.Join(", ", DomainValues.Rotations)})");
+            t.HasCheckConstraint("ck_design_objects_rotation", $"rotation >= 0 AND rotation <= {DomainValues.MaxRotation}");
             t.HasCheckConstraint("ck_design_objects_z", "z_cm >= 0");
             t.HasCheckConstraint("ck_design_objects_scale", "scale_x > 0 AND scale_y > 0 AND scale_z > 0");
             t.HasCheckConstraint("ck_design_objects_material", Check.NullOrIn("material", DomainValues.MaterialTypes));

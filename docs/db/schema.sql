@@ -413,3 +413,28 @@ BEGIN
 END $EF$;
 COMMIT;
 
+START TRANSACTION;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "migration_id" = '20261104232830_FreeRotation') THEN
+    ALTER TABLE design_objects DROP CONSTRAINT ck_design_objects_rotation;
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "migration_id" = '20261104232830_FreeRotation') THEN
+    ALTER TABLE design_objects ADD CONSTRAINT ck_design_objects_rotation CHECK (rotation >= 0 AND rotation <= 359);
+    END IF;
+END $EF$;
+
+DO $EF$
+BEGIN
+    IF NOT EXISTS(SELECT 1 FROM "__EFMigrationsHistory" WHERE "migration_id" = '20261104232830_FreeRotation') THEN
+    INSERT INTO "__EFMigrationsHistory" (migration_id, product_version)
+    VALUES ('20261104232830_FreeRotation', '10.0.14');
+    END IF;
+END $EF$;
+COMMIT;
+

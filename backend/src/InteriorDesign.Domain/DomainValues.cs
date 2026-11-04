@@ -46,5 +46,8 @@ public static class DomainValues
 
     public static readonly string[] Surfaces = ["piso", "muros", "techo"];
 
-    public static readonly int[] Rotations = [0, 90, 180, 270];
+    /// <summary>Rotacion en grados enteros, 0 a 359 (antihoraria vista desde arriba).</summary>
+    public const int MaxRotation = 359;
+
+    public static bool IsValidRotation(int rotation) => rotation is >= 0 and <= MaxRotation;
 }

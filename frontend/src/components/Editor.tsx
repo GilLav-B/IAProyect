@@ -5,7 +5,7 @@ import Link from "next/link";
 import { api, ApiError, API_URL } from "@/lib/api";
 import { describe } from "@/lib/reasons";
 import type { BudgetInfo, CatalogMaterial, DesignState, HistoryEntry, Move, MoveBatchResult, Product, Proposal, Reason, Requirement, Saving, ValidationReport } from "@/lib/types";
-import { fmtM, fmtMoney, fmtRange, label } from "@/lib/units";
+import { fmtM, fmtMoney, fmtRange, label, rotateKeepingCenter } from "@/lib/units";
 import { AddFurniture } from "./AddFurniture";
 import { BudgetPanel } from "./BudgetPanel";
 import { DecisionBox, type Decision } from "./DecisionBox";
@@ -160,17 +160,30 @@ export function Editor({ designId }: { designId: string }) {
     [state],
   );
 
-  const rotate = useCallback(
-    (instanceId: string, delta: 90 | -90) => {
+  /** Gira a cualquier angulo (0-359) sin mover el centro del mueble. */
+  const rotateTo = useCallback(
+    (instanceId: string, rotation: number) => {
       const obj = shown?.objects.find((o) => o.instanceId === instanceId);
-      if (!obj) return;
+      const product = obj ? productMap.get(obj.catalogId) : undefined;
+      if (!obj || !product) return;
       if (obj.locked) {
         setMessage({ kind: "info", text: `${instanceId} esta bloqueado. Desbloquealo para moverlo o rotarlo.` });
         return;
       }
-      updateDraft(instanceId, { rotation: (obj.rotation + delta + 360) % 360 });
+      updateDraft(
+        instanceId,
+        rotateKeepingCenter(obj.position.x, obj.position.y, obj.rotation, rotation, product.dimensions.width, product.dimensions.depth),
+      );
     },
-    [shown, updateDraft],
+    [shown, productMap, updateDraft],
+  );
+
+  const rotate = useCallback(
+    (instanceId: string, delta: 90 | -90) => {
+      const obj = shown?.objects.find((o) => o.instanceId === instanceId);
+      if (obj) rotateTo(instanceId, obj.rotation + delta);
+    },
+    [shown, rotateTo],
   );
 
   // Atajos: R rota a la derecha, Shift+R a la izquierda, Esc quita la seleccion
@@ -360,6 +373,7 @@ export function Editor({ designId }: { designId: string }) {
           }}
           onBlocked={(id) => setMessage({ kind: "info", text: `${id} esta bloqueado. Desbloquealo para moverlo.` })}
           onDrag={(id, x, y) => updateDraft(id, { x, y })}
+          onRotate={rotateTo}
         />
         <div className={styles.viewToggle} role="group" aria-label="Vista">
           {(["3d", "planta"] as const).map((v) => (
@@ -480,6 +494,7 @@ export function Editor({ designId }: { designId: string }) {
             hasDraft={hasDraft}
             busy={busy}
             onRotate={(delta) => rotate(selected.instanceId, delta)}
+            onRotateTo={(deg) => rotateTo(selected.instanceId, deg)}
             onReplace={(catalogId) =>
               void propose({ action: "reemplazar", instanceId: selected.instanceId, catalogId }, `Modelo cambiado a ${productMap.get(catalogId)?.name}`)
             }

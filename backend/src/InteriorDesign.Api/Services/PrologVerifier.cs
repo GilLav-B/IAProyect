@@ -17,10 +17,19 @@ public class PrologVerifier(PrologRunner? runner, ILogger<PrologVerifier> logger
     // Prolog imprime 45998.0 cuando suma flotantes; vale lo mismo que 45998
     private static string Normalize(string s) => System.Text.RegularExpressions.Regex.Replace(s, @"(\d+)\.0\b", "$1");
 
+    /// <summary>diseno.pl solo modela rotaciones de 0, 90, 180 y 270 grados (dims_rot/5).</summary>
+    public static bool PrologCanModel(DesignState s, Proposal? p = null) =>
+        s.Objects.All(o => o.Rotation % 90 == 0) && (p is not MoveProposal m || m.Rotation % 90 == 0)
+        && (p is not AddProposal a || a.Rotation % 90 == 0);
+
+    private const string NotModelled = "diseno.pl solo modela rotaciones de 90 grados; este diseno tiene angulos libres y lo valida el motor en C#.";
+
     public async Task<PrologComparison> CompareAsync(DesignState s, DesignEngine engine, CancellationToken ct = default)
     {
         if (runner is null)
             return new PrologComparison(false, false, null, null, null, null, null, null, "SWI-Prolog no esta instalado (SWIPL_PATH).");
+        if (!PrologCanModel(s))
+            return new PrologComparison(false, false, null, null, null, null, null, null, NotModelled);
         var d = Term.A(s.Design.Id).ToString();
         var total = engine.BudgetTotal(s);
         var mine = new Dictionary<string, string>
@@ -52,6 +61,7 @@ public class PrologVerifier(PrologRunner? runner, ILogger<PrologVerifier> logger
     public async Task<PrologCheck?> VerdictAsync(DesignState s, DesignEngine engine, Proposal proposal, Verdict mine, CancellationToken ct = default)
     {
         if (runner is null) return null;
+        if (!PrologCanModel(s, proposal)) return new PrologCheck("no aplica: " + NotModelled, true);
         try
         {
             var r = await runner.QueryAsync([s], engine.Catalog, new Dictionary<string, string>

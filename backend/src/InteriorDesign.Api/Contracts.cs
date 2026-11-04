@@ -59,9 +59,9 @@ public record ProposalRequest(
         };
         if (p is null)
             error = $"Propuesta incompleta o accion desconocida '{Action}'. Ver la descripcion de ProposalRequest.";
-        else if (Rotation is not null && !InteriorDesign.Domain.DomainValues.Rotations.Contains(Rotation.Value))
+        else if (Rotation is not null && !InteriorDesign.Domain.DomainValues.IsValidRotation(Rotation.Value))
         {
-            error = "rotation debe ser 0, 90, 180 o 270.";
+            error = "rotation debe ser un entero de 0 a 359.";
             p = null;
         }
         return p;

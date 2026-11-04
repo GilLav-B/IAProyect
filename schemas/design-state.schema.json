@@ -178,8 +178,10 @@
           }
         },
         "rotation": {
-          "description": "[SUPUESTO] Grados alrededor del eje vertical. Por ahora solo multiplos de 90, como diseno.pl.",
-          "enum": [0, 90, 180, 270]
+          "description": "Grados enteros alrededor del eje vertical (0-359, antihorario visto desde arriba). diseno.pl solo modela 0/90/180/270; los demas angulos los valida el motor en C#.",
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 359
         },
         "scale": {
           "description": "[SUPUESTO] Escala visual. Para productos reales debe ser 1 (dimensiones reales); el motor lo valida.",

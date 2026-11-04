@@ -173,6 +173,15 @@ public class ApiTests(ApiFixture fx) : IClassFixture<ApiFixture>
         Assert.Equal(320, state["objects"]!.AsArray().Single(o => o!["instanceId"]!.GetValue<string>() == "sofa_d1")!["position"]!["x"]!.GetValue<int>());
         Assert.Equal(2, (await Get($"/api/designs/{copy}/history")).AsArray().Count);
 
+        // Rotacion libre: 30 grados se revisa; 360 no es valido
+        var free = await Post($"/api/designs/{copy}/proposals/moves?dryRun=true",
+            new { moves = new object[] { new { instanceId = "lampara_d1", x = 60, y = 300, rotation = 30 } } });
+        Assert.Equal(HttpStatusCode.OK, free.StatusCode);
+        Assert.True(JsonNode.Parse(await free.Content.ReadAsStringAsync())!["accepted"]!.GetValue<bool>());
+        var invalid = await Post($"/api/designs/{copy}/proposals/moves?dryRun=true",
+            new { moves = new object[] { new { instanceId = "lampara_d1", x = 60, y = 300, rotation = 360 } } });
+        Assert.Equal(HttpStatusCode.BadRequest, invalid.StatusCode);
+
         // Si algo interfiere no se guarda nada
         var bad = await Post($"/api/designs/{copy}/proposals/moves",
             new { moves = new object[] { new { instanceId = "lampara_d1", x = 120, y = 345, rotation = 0 } } });
@@ -300,7 +309,7 @@ public class ApiTests(ApiFixture fx) : IClassFixture<ApiFixture>
     {
         var state = await Get("/api/designs/d4");
         state["design"]!["id"] = "t_invalido";
-        state["objects"]![0]!["rotation"] = 45;
+        state["objects"]![0]!["rotation"] = 400;
         Assert.Equal(HttpStatusCode.BadRequest, (await Post("/api/designs", state)).StatusCode);
 
         state["objects"]![0]!["rotation"] = 0;

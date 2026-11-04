@@ -17,6 +17,8 @@ interface Props {
   hasDraft: boolean;
   busy: boolean;
   onRotate: (delta: 90 | -90) => void;
+  /** Angulo exacto (0-359). */
+  onRotateTo: (deg: number) => void;
   onReplace: (catalogId: string) => void;
   onColor: (color: string) => void;
   onMaterial: (material: string) => void;
@@ -120,7 +122,22 @@ export function ConfigPanel(p: Props) {
         </dd>
 
         <dt>Rotacion</dt>
-        <dd>{obj.rotation}°</dd>
+        <dd>
+          <span className={styles.angle}>
+            <input
+              key={obj.rotation}
+              type="number"
+              min={0}
+              max={359}
+              defaultValue={obj.rotation}
+              disabled={busy || obj.locked}
+              aria-label="Rotacion en grados"
+              onKeyDown={(e) => e.key === "Enter" && p.onRotateTo(Number(e.currentTarget.value))}
+              onBlur={(e) => Number(e.target.value) !== obj.rotation && p.onRotateTo(Number(e.target.value))}
+            />
+            °
+          </span>
+        </dd>
       </dl>
 
       <div className={styles.actions}>
@@ -140,8 +157,9 @@ export function ConfigPanel(p: Props) {
         </button>
       </div>
       <p className={styles.hint}>
-        Arrastra para mover (Shift = ajuste fino de 1 cm). R / Shift+R rota. Puedes atravesar otros muebles mientras acomodas; solo
-        no te deja guardar si algo interfiere.
+        Arrastra para mover (Shift = ajuste fino de 1 cm). Clic derecho y mueve en circulo para girar a cualquier angulo (de 5 en
+        5°; Shift = 1°). R / Shift+R gira 90°. Puedes atravesar otros muebles mientras acomodas; solo no te deja guardar si algo
+        interfiere.
         {hasDraft && " Modelo, color, material y bloqueo se cambian despues de guardar o descartar los movimientos."}
       </p>
     </section>

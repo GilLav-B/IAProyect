@@ -141,8 +141,8 @@ public static class DesignEndpoints
             if (req.Moves.Count == 0) return Results.BadRequest("No hay movimientos.");
             if (req.Moves.Select(m => m.InstanceId).Distinct().Count() != req.Moves.Count)
                 return Results.BadRequest("Cada objeto puede aparecer una sola vez en el lote.");
-            if (req.Moves.Any(m => !DomainValues.Rotations.Contains(m.Rotation)))
-                return Results.BadRequest("rotation debe ser 0, 90, 180 o 270.");
+            if (req.Moves.Any(m => !DomainValues.IsValidRotation(m.Rotation)))
+                return Results.BadRequest("rotation debe ser un entero de 0 a 359.");
             if (await svc.LoadAsync(id, ct) is not { } x) return Results.NotFound();
             var missing = req.Moves.Where(m => x.State.Objects.All(o => o.InstanceId != m.InstanceId)).Select(m => m.InstanceId).ToList();
             if (missing.Count > 0) return Results.BadRequest($"No existen: {string.Join(", ", missing)}");

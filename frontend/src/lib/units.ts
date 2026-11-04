@@ -12,9 +12,35 @@ export const fmtMoney = (n: number) =>
 export const fmtRange = (r: { min: number; max: number }) =>
   r.min === r.max ? fmtMoney(r.min) : `${fmtMoney(r.min)} - ${fmtMoney(r.max)}`;
 
-/** Medidas en planta segun la rotacion (igual que dims_rot/5 en diseno.pl). */
-export const rotatedDims = (rotation: number, width: number, depth: number): [number, number] =>
-  rotation === 90 || rotation === 270 ? [depth, width] : [width, depth];
+/** Rotacion en 0..359. */
+export const normalizeRotation = (deg: number) => ((Math.round(deg) % 360) + 360) % 360;
+
+/**
+ * Caja envolvente en planta segun la rotacion. Con multiplos de 90 es dims_rot/5 de diseno.pl;
+ * con cualquier otro angulo es la caja del rectangulo girado (igual que el motor).
+ */
+export function rotatedDims(rotation: number, width: number, depth: number): [number, number] {
+  const r = normalizeRotation(rotation);
+  if (r % 90 === 0) return r === 90 || r === 270 ? [depth, width] : [width, depth];
+  const t = (r * Math.PI) / 180;
+  const c = Math.abs(Math.cos(t));
+  const s = Math.abs(Math.sin(t));
+  return [width * c + depth * s, width * s + depth * c];
+}
+
+/**
+ * Nueva posicion al girar sin mover el centro del mueble. La posicion (x,y) es la esquina suroeste de la
+ * caja envolvente, que cambia de tamano con el angulo.
+ */
+export function rotateKeepingCenter(x: number, y: number, rotation: number, newRotation: number, width: number, depth: number) {
+  const [a, b] = rotatedDims(rotation, width, depth);
+  const [a2, b2] = rotatedDims(newRotation, width, depth);
+  return {
+    x: Math.round(x + a / 2 - a2 / 2),
+    y: Math.round(y + b / 2 - b2 / 2),
+    rotation: normalizeRotation(newRotation),
+  };
+}
 
 /** Colores del catalogo (valores en espanol) a hex para la escena. [SUPUESTO] tonos aproximados. */
 const COLORS: Record<string, string> = {

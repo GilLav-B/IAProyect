@@ -25,6 +25,8 @@ interface Props {
   onSelect: (instanceId: string | null) => void;
   onBlocked: (instanceId: string) => void;
   onDrag: (instanceId: string, x: number, y: number) => void;
+  /** Giro libre (clic derecho + mover en circulo). */
+  onRotate: (instanceId: string, rotation: number) => void;
 }
 
 /** [SUPUESTO] un cuadro sin mueble debajo se cuelga con su centro a 1.50 m. */
@@ -89,7 +91,7 @@ function CameraRig({ view, L, W, enabled }: { view: ViewMode; L: number; W: numb
   );
 }
 
-export function RoomScene({ state, view, floorKind, products, selectedId, conflictIds, pendingIds, onSelect, onBlocked, onDrag }: Props) {
+export function RoomScene({ state, view, floorKind, products, selectedId, conflictIds, pendingIds, onSelect, onBlocked, onDrag, onRotate }: Props) {
   const L = cmToM(state.room.length);
   const W = cmToM(state.room.width);
   const H = cmToM(state.room.height);
@@ -105,6 +107,8 @@ export function RoomScene({ state, view, floorKind, products, selectedId, confli
   const lift = useMemo(() => elevations(state.objects, products), [state.objects, products]);
 
   return (
+    // Sin menu contextual: el clic derecho sobre un mueble sirve para girarlo
+    <div style={{ width: "100%", height: "100%" }} onContextMenu={(e) => e.preventDefault()}>
     <Canvas
       shadows="percentage"
       dpr={[1, 2]}
@@ -156,11 +160,13 @@ export function RoomScene({ state, view, floorKind, products, selectedId, confli
             onBlocked={() => onBlocked(o.instanceId)}
             onDragging={handleDragging}
             onDrag={(x, y) => onDrag(o.instanceId, x, y)}
+            onRotate={(rotation) => onRotate(o.instanceId, rotation)}
           />
         );
       })}
 
       <CameraRig view={view} L={L} W={W} enabled={!dragging} />
     </Canvas>
+    </div>
   );
 }

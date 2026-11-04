@@ -347,6 +347,7 @@ export function NewProject() {
           onSelect={() => {}}
           onBlocked={() => {}}
           onDrag={() => {}}
+          onRotate={() => {}}
         />
         <div className={styles.previewLabel}>
           Vista previa · {(room.length / 100).toFixed(2)} × {(room.width / 100).toFixed(2)} × {(room.height / 100).toFixed(2)} m
