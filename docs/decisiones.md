@@ -34,4 +34,15 @@ Esto se aplica en la Fase 5 (`ai-rules/image-generator.md` y `safety-rules.md`) 
 
 - Se puede mover y rotar libremente aunque un mueble atraviese otro; lo que interfiere se marca en rojo.
 - Solo se puede **guardar** si el motor no encuentra interferencias. Los objetos bloqueados no se mueven.
-- Por ahora los muebles son cajas con medidas reales; despues se usaran modelos 3D gratuitos (CC0) escalados a las medidas del catalogo.
+- Los muebles se dibujan con medidas exactas del catalogo (la huella que valida el motor no cambia).
+
+## Estilo visual del visor 3D (2026-11-04)
+
+- Assets gratuitos **CC0 de Poly Haven** (`frontend/public/assets`, ver `CREDITOS.md`; se bajan con `npm run assets`):
+  modelos GLB (mesa de centro, mueble TV, librero, escritorio, planta), texturas PBR (piso laminado, yeso, tela, roble) y HDRI de interior.
+- Cada producto puede traer `asset3D` (ruta del GLB). Sin modelo, el mueble se arma en codigo (sofa, cama, TV, lamparas, alfombra, isla,
+  cuadro, comedor, silla de oficina) con la textura del material y el **color elegido en el configurador**.
+- Convencion de frente: rotacion 0 = mira al sur; 90 = este; 180 = norte; 270 = oeste.
+- La TV y el cuadro "no ocupan piso" (como en `diseno.pl`): la TV se dibuja sobre el mueble que tiene debajo y el cuadro colgado
+  a 1.50 m. Es solo visual; el motor no cambia.
+- Vista tipo "casa de munecas": los muros cercanos a la camara se ocultan solos. Vistas 3D y Planta.

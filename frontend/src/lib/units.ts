@@ -18,10 +18,10 @@ export const rotatedDims = (rotation: number, width: number, depth: number): [nu
 
 /** Colores del catalogo (valores en espanol) a hex para la escena. [SUPUESTO] tonos aproximados. */
 const COLORS: Record<string, string> = {
-  beige: "#d9c7a7",
-  gris: "#8b9099",
-  negro: "#2e2e30",
-  blanco: "#efefea",
+  beige: "#c4ab85",
+  gris: "#7d828a",
+  negro: "#262628",
+  blanco: "#e6e4de",
   madera_clara: "#c9a27b",
   madera_oscura: "#6e4b30",
   cafe: "#7b5332",

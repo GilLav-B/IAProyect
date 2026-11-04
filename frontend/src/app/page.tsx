@@ -25,31 +25,43 @@ export default function Home() {
 
   return (
     <main className={styles.main}>
-      <h1>Diseno de interiores</h1>
-      <p className={styles.muted}>Elige una version de diseno para abrirla en el editor 3D.</p>
+      <header className={styles.hero}>
+        <div className={styles.brand}>IAProyect</div>
+        <h1>Diseno de interiores asistido por IA</h1>
+        <p className={styles.muted}>
+          Abre una version para editarla en 3D. Cada cambio pasa por el motor de reglas: medidas reales, puertas, ventanas y
+          presupuesto.
+        </p>
+      </header>
 
       {error && <p className={styles.error}>{error}</p>}
-      {!projects && !error && <p>Cargando proyectos…</p>}
+      {!projects && !error && <p className={styles.muted}>Cargando proyectos…</p>}
       {projects?.length === 0 && <p>No hay proyectos todavia.</p>}
 
       {projects?.map((p) => (
         <section key={p.id} className={styles.project}>
           <h2>
-            {p.name} <span className={styles.muted}>· {label(p.type)}</span>
+            {p.name} <span className={styles.tag}>{label(p.type)}</span>
           </h2>
           <ul className={styles.designs}>
-            {p.designs.map((d) => (
+            {p.designs.map((d, i) => (
               <li key={d.id}>
                 <Link href={`/designs/${encodeURIComponent(d.id)}`} className={styles.designCard}>
-                  <div className={styles.designHead}>
-                    <strong>{d.name}</strong>
-                    <span className={d.valid ? styles.ok : styles.bad}>{d.valid ? "Valido" : "Con conflictos"}</span>
+                  <div className={styles.cardTop} data-style={d.style}>
+                    <span className={styles.number}>{i + 1}</span>
+                    <span className={styles.styleName}>{label(d.style)}</span>
                   </div>
-                  <div className={styles.muted}>
-                    {d.id} · {d.style} · presupuesto {d.budgetMode}
-                    {d.parentId && <> · viene de {d.parentId}</>}
+                  <div className={styles.cardBody}>
+                    <div className={styles.designHead}>
+                      <strong>{d.name}</strong>
+                      <span className={d.valid ? styles.ok : styles.bad}>{d.valid ? "Valido" : "Con conflictos"}</span>
+                    </div>
+                    <div className={styles.muted}>
+                      presupuesto {d.budgetMode}
+                      {d.parentId && <> · viene de {d.parentId}</>}
+                    </div>
+                    <div className={styles.total}>{fmtRange(d.total)}</div>
                   </div>
-                  <div className={styles.total}>{fmtRange(d.total)}</div>
                 </Link>
               </li>
             ))}

@@ -36,4 +36,19 @@ public static class ExampleSeeder
         }
         return true;
     }
+
+    /// <summary>
+    /// Llena el modelo 3D (asset3D) de los productos de ejemplo que aun no lo tienen.
+    /// No cambia nada mas ni pisa un modelo que ya se haya puesto a mano.
+    /// </summary>
+    public static async Task<int> FillMissingAssetsAsync(InteriorDesignDbContext db, string schemasDir, CancellationToken ct = default)
+    {
+        var catalog = JsonSerializer.Deserialize<CatalogState>(
+            await File.ReadAllTextAsync(Path.Combine(schemasDir, "examples", "catalog.json"), ct), StateJson.Options)!;
+        var assets = catalog.Products.Where(p => p.Asset3D is not null).ToDictionary(p => p.Id, p => p.Asset3D!);
+        var products = await db.Products.Where(p => p.Asset3D == null && assets.Keys.Contains(p.Id)).ToListAsync(ct);
+        foreach (var p in products) p.Asset3D = assets[p.Id];
+        await db.SaveChangesAsync(ct);
+        return products.Count;
+    }
 }

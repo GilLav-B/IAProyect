@@ -72,6 +72,8 @@ export interface Product {
   styles: string[];
   price: PriceRange;
   attributes: Record<string, string | number>;
+  /** Ruta del modelo 3D (GLB). Sin modelo, el mueble se arma en codigo. */
+  asset3D?: string;
 }
 
 export interface Reason {

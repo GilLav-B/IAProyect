@@ -112,6 +112,110 @@
   font: inherit;
 }
 
+.swatches {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.swatch,
+.swatchOn {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  box-shadow: 0 0 0 1px var(--line);
+  cursor: pointer;
+  padding: 0;
+}
+
+.swatchOn {
+  box-shadow: 0 0 0 2px var(--accent);
+}
+
+.swatch:disabled,
+.swatchOn:disabled,
+.pill:disabled,
+.pillOn:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.swatchLabel {
+  font-size: 13px;
+  color: var(--muted);
+  text-transform: capitalize;
+}
+
+.pills {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.pill,
+.pillOn {
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+  font-size: 13px;
+  text-transform: capitalize;
+  cursor: pointer;
+}
+
+.pillOn {
+  border-color: var(--accent);
+  background: #e7f1fc;
+  color: #1864ab;
+}
+
+.chips {
+  display: inline-flex;
+  gap: 6px;
+  margin-left: 10px;
+  vertical-align: middle;
+}
+
+.chip {
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #efebe4;
+  color: #5c5f66;
+  text-transform: capitalize;
+}
+
+.viewToggle {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: flex;
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: 8px;
+  padding: 3px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+}
+
+.viewToggle button {
+  border: 0;
+  background: transparent;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font: inherit;
+  font-size: 13px;
+  color: #495057;
+  cursor: pointer;
+}
+
+.viewToggle .viewOn {
+  background: var(--accent);
+  color: #fff;
+}
+
 .price {
   font-weight: 600;
 }

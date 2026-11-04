@@ -1,11 +1,25 @@
 .main {
-  max-width: 960px;
+  max-width: 1040px;
   margin: 0 auto;
-  padding: 32px 16px 64px;
+  padding: 40px 16px 64px;
 }
 
-.main h1 {
-  margin: 0 0 4px;
+.hero {
+  margin-bottom: 8px;
+}
+
+.brand {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.hero h1 {
+  margin: 6px 0 8px;
+  font-size: 32px;
+  letter-spacing: -0.02em;
 }
 
 .muted {
@@ -19,7 +33,20 @@
 
 .project h2 {
   font-size: 20px;
-  margin: 28px 0 12px;
+  margin: 32px 0 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.tag {
+  font-size: 12px;
+  font-weight: 500;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: #efebe4;
+  color: #5c5f66;
+  text-transform: capitalize;
 }
 
 .designs {
@@ -27,23 +54,72 @@
   padding: 0;
   margin: 0;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 16px;
 }
 
 .designCard {
   display: block;
-  padding: 14px;
   border: 1px solid var(--line);
-  border-radius: 10px;
+  border-radius: 14px;
   background: var(--card);
   color: var(--text);
   text-decoration: none;
-  transition: border-color 0.15s;
+  overflow: hidden;
+  transition: transform 0.15s, box-shadow 0.15s, border-color 0.15s;
 }
 
 .designCard:hover {
-  border-color: var(--accent);
+  transform: translateY(-2px);
+  border-color: #c9d8ea;
+  box-shadow: 0 8px 24px rgba(30, 40, 60, 0.08);
+}
+
+.cardTop {
+  height: 92px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: 10px 14px;
+  color: #fff;
+  background: linear-gradient(135deg, #b39a7a, #8a7357);
+}
+
+.cardTop[data-style="moderno"] {
+  background: linear-gradient(135deg, #8d939c, #4f565f);
+}
+
+.cardTop[data-style="minimalista"] {
+  background: linear-gradient(135deg, #d9d2c5, #a99f8f);
+}
+
+.cardTop[data-style="industrial"] {
+  background: linear-gradient(135deg, #6b6460, #2f2c2a);
+}
+
+.cardTop[data-style="japandi"] {
+  background: linear-gradient(135deg, #cdb79a, #8b7b62);
+}
+
+.cardTop[data-style="clasico"] {
+  background: linear-gradient(135deg, #a8845b, #5f4630);
+}
+
+.number {
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1;
+  opacity: 0.9;
+}
+
+.styleName {
+  font-size: 13px;
+  text-transform: capitalize;
+  opacity: 0.95;
+}
+
+.cardBody {
+  padding: 12px 14px 14px;
 }
 
 .designHead {
@@ -63,6 +139,7 @@
   font-size: 12px;
   padding: 2px 8px;
   border-radius: 999px;
+  white-space: nowrap;
 }
 
 .ok {

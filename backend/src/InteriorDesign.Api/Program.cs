@@ -50,9 +50,13 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<InteriorDesignDbContext>();
     await db.Database.MigrateAsync();
-    if (app.Configuration.GetValue("SeedExamples", app.Environment.IsDevelopment())
-        && await ExampleSeeder.SeedIfEmptyAsync(db, schemasDir))
-        app.Logger.LogInformation("Se cargaron los datos de ejemplo (catalogo y d1-d4 de diseno.pl).");
+    if (app.Configuration.GetValue("SeedExamples", app.Environment.IsDevelopment()))
+    {
+        if (await ExampleSeeder.SeedIfEmptyAsync(db, schemasDir))
+            app.Logger.LogInformation("Se cargaron los datos de ejemplo (catalogo y d1-d4 de diseno.pl).");
+        if (await ExampleSeeder.FillMissingAssetsAsync(db, schemasDir) is > 0 and var n)
+            app.Logger.LogInformation("Se asignaron {N} modelos 3D a productos de ejemplo.", n);
+    }
     var prolog = scope.ServiceProvider.GetRequiredService<PrologVerifier>();
     app.Logger.LogInformation("Verificador Prolog: {Estado}", prolog.Available ? "disponible" : "NO disponible (instala SWI-Prolog)");
 }

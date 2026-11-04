@@ -7,7 +7,7 @@ import { describe } from "@/lib/reasons";
 import type { DesignState, Move, MoveBatchResult, Product, Proposal, Reason, ValidationReport } from "@/lib/types";
 import { fmtM, fmtMoney, fmtRange, label } from "@/lib/units";
 import { ConfigPanel } from "./ConfigPanel";
-import { RoomScene } from "./scene/RoomScene";
+import { RoomScene, type ViewMode } from "./scene/RoomScene";
 import styles from "./Editor.module.css";
 
 type Message = { kind: "ok" | "error" | "info"; text: string; reasons?: Reason[] };
@@ -32,6 +32,7 @@ export function Editor({ designId }: { designId: string }) {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<Message | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [view, setView] = useState<ViewMode>("3d");
   const checkSeq = useRef(0);
 
   const reload = useCallback(async () => {
@@ -79,7 +80,7 @@ export function Editor({ designId }: { designId: string }) {
   const checking = hasDraft && !currentCheck;
 
   /** Lo guardado + el borrador: es lo que se dibuja. */
-  const view = useMemo<DesignState | null>(() => {
+  const shown = useMemo<DesignState | null>(() => {
     if (!state) return null;
     if (!hasDraft) return state;
     return {
@@ -128,7 +129,7 @@ export function Editor({ designId }: { designId: string }) {
 
   const rotate = useCallback(
     (instanceId: string, delta: 90 | -90) => {
-      const obj = view?.objects.find((o) => o.instanceId === instanceId);
+      const obj = shown?.objects.find((o) => o.instanceId === instanceId);
       if (!obj) return;
       if (obj.locked) {
         setMessage({ kind: "info", text: `${instanceId} esta bloqueado. Desbloquealo para moverlo o rotarlo.` });
@@ -136,7 +137,7 @@ export function Editor({ designId }: { designId: string }) {
       }
       updateDraft(instanceId, { rotation: (obj.rotation + delta + 360) % 360 });
     },
-    [view, updateDraft],
+    [shown, updateDraft],
   );
 
   // Atajos: R rota a la derecha, Shift+R a la izquierda, Esc quita la seleccion
@@ -209,9 +210,9 @@ export function Editor({ designId }: { designId: string }) {
         <Link href="/">← Volver</Link>
       </main>
     );
-  if (!state || !view || !report || !shownReport) return <main className={styles.center}>Cargando diseno…</main>;
+  if (!state || !shown || !report || !shownReport) return <main className={styles.center}>Cargando diseno…</main>;
 
-  const selected = view.objects.find((o) => o.instanceId === selectedId) ?? null;
+  const selected = shown.objects.find((o) => o.instanceId === selectedId) ?? null;
   const selectedProduct = selected ? productMap.get(selected.catalogId) : undefined;
   const canSave = hasDraft && !!currentCheck?.accepted && !busy;
 
@@ -225,8 +226,12 @@ export function Editor({ designId }: { designId: string }) {
           <strong>{state.design.name}</strong>
           <span className={styles.muted}>
             {" "}
-            · {label(state.room.spaceType)} {fmtM(state.room.length)} × {fmtM(state.room.width)} × {fmtM(state.room.height)} ·
-            estilo {state.design.style} · revision {state.design.revision}
+            · {label(state.room.spaceType)} {fmtM(state.room.length)} × {fmtM(state.room.width)} × {fmtM(state.room.height)}
+          </span>
+          <span className={styles.chips}>
+            <span className={styles.chip}>{label(state.design.style)}</span>
+            <span className={styles.chip}>presupuesto {state.design.budgetMode}</span>
+            <span className={styles.chip}>rev. {state.design.revision}</span>
           </span>
         </div>
         <span className={shownReport.valid ? styles.badgeOk : styles.badgeBad}>{shownReport.valid ? "Valido" : "Con conflictos"}</span>
@@ -234,7 +239,8 @@ export function Editor({ designId }: { designId: string }) {
 
       <div className={styles.viewport}>
         <RoomScene
-          state={view}
+          view={view}
+          state={shown}
           products={productMap}
           selectedId={selectedId}
           conflictIds={conflictIds}
@@ -243,6 +249,13 @@ export function Editor({ designId }: { designId: string }) {
           onBlocked={(id) => setMessage({ kind: "info", text: `${id} esta bloqueado. Desbloquealo para moverlo.` })}
           onDrag={(id, x, y) => updateDraft(id, { x, y })}
         />
+        <div className={styles.viewToggle} role="group" aria-label="Vista">
+          {(["3d", "planta"] as const).map((v) => (
+            <button key={v} type="button" className={view === v ? styles.viewOn : undefined} onClick={() => setView(v)}>
+              {v === "3d" ? "3D" : "Planta"}
+            </button>
+          ))}
+        </div>
         <div className={styles.legend}>
           <span className={styles.swDoor} /> zona de puerta <span className={styles.swWindow} /> acceso a ventana
           <span className={styles.swPending} /> sin guardar <span className={styles.swConflict} /> interfiere
@@ -313,7 +326,7 @@ export function Editor({ designId }: { designId: string }) {
           <section className={styles.card}>
             <p className={styles.muted}>Haz clic en un mueble para seleccionarlo.</p>
             <ul className={styles.objectList}>
-              {view.objects.map((o) => (
+              {shown.objects.map((o) => (
                 <li key={o.instanceId}>
                   <button type="button" onClick={() => setSelectedId(o.instanceId)}>
                     {o.locked ? "🔒 " : ""}

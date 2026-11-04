@@ -2,7 +2,7 @@
 
 import { describe } from "@/lib/reasons";
 import type { PlacedObject, Product, Reason } from "@/lib/types";
-import { fmtM, fmtRange, label, rotatedDims } from "@/lib/units";
+import { colorHex, fmtM, fmtRange, label, rotatedDims } from "@/lib/units";
 import styles from "./Editor.module.css";
 
 interface Props {
@@ -69,24 +69,40 @@ export function ConfigPanel(p: Props) {
 
         <dt>Color</dt>
         <dd>
-          <select value={color} disabled={configLocked} onChange={(e) => p.onColor(e.target.value)}>
+          <div className={styles.swatches}>
             {product.colors.map((c) => (
-              <option key={c} value={c}>
-                {label(c)}
-              </option>
+              <button
+                key={c}
+                type="button"
+                title={label(c)}
+                aria-label={label(c)}
+                aria-pressed={c === color}
+                disabled={configLocked}
+                className={c === color ? styles.swatchOn : styles.swatch}
+                style={{ background: colorHex(c) }}
+                onClick={() => c !== color && p.onColor(c)}
+              />
             ))}
-          </select>
+            <span className={styles.swatchLabel}>{label(color)}</span>
+          </div>
         </dd>
 
         <dt>Material</dt>
         <dd>
-          <select value={material} disabled={configLocked} onChange={(e) => p.onMaterial(e.target.value)}>
+          <div className={styles.pills}>
             {product.materials.map((m) => (
-              <option key={m} value={m}>
+              <button
+                key={m}
+                type="button"
+                aria-pressed={m === material}
+                disabled={configLocked}
+                className={m === material ? styles.pillOn : styles.pill}
+                onClick={() => m !== material && p.onMaterial(m)}
+              >
                 {label(m)}
-              </option>
+              </button>
             ))}
-          </select>
+          </div>
         </dd>
 
         <dt>Precio</dt>
