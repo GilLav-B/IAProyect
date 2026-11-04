@@ -1,6 +1,8 @@
 import type {
   ApplyResult,
+  CatalogMaterial,
   DesignState,
+  RoomWithRequirements,
   Move,
   MoveBatchResult,
   PlacedObject,
@@ -40,6 +42,28 @@ export const api = {
   design: (id: string) => request<DesignState>(`/api/designs/${id}`),
   validation: (id: string) => request<ValidationReport>(`/api/designs/${id}/validation`),
   products: () => request<Product[]>("/api/catalog/products"),
+  materials: () => request<CatalogMaterial[]>("/api/catalog/materials"),
+
+  createProject: (body: { id?: string; name: string; type: string }) =>
+    request<{ id: string }>("/api/projects", { method: "POST", body: JSON.stringify(body) }),
+  createRoom: (projectId: string, body: RoomWithRequirements) =>
+    request<RoomWithRequirements>(`/api/projects/${projectId}/rooms`, { method: "POST", body: JSON.stringify(body) }),
+  room: (roomId: string) => request<RoomWithRequirements>(`/api/rooms/${roomId}`),
+  updateRoom: (roomId: string, body: RoomWithRequirements) =>
+    request<RoomWithRequirements>(`/api/rooms/${roomId}`, { method: "PUT", body: JSON.stringify(body) }),
+  createDesign: (state: DesignState) =>
+    request<{ state: DesignState; report: ValidationReport }>("/api/designs", { method: "POST", body: JSON.stringify(state) }),
+
+  /** Agrega un producto: el motor elige el lugar. Si no se puede, 409 con los motivos. */
+  async addObject(id: string, catalogId: string): Promise<{ ok: true; result: ApplyResult } | { ok: false; verdict: Verdict }> {
+    try {
+      const result = await request<ApplyResult>(`/api/designs/${id}/objects`, { method: "POST", body: JSON.stringify({ catalogId }) });
+      return { ok: true, result };
+    } catch (e) {
+      if (e instanceof ApiError && e.status === 409) return { ok: false, verdict: e.body as Verdict };
+      throw e;
+    }
+  },
 
   /** Valida y aplica. Si el motor la rechaza la API responde 409 con el veredicto. */
   async apply(id: string, proposal: Proposal): Promise<{ ok: true; result: ApplyResult } | { ok: false; verdict: Verdict }> {

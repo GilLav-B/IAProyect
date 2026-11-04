@@ -181,6 +181,58 @@ public class ApiTests(ApiFixture fx) : IClassFixture<ApiFixture>
     }
 
     [PostgresFact]
+    public async Task Crear_desde_cero_proyecto_habitacion_diseno_y_agregar_muebles()
+    {
+        var pid = $"proy_{Guid.NewGuid():N}"[..13];
+        Assert.Equal(HttpStatusCode.Created, (await Post("/api/projects", new { id = pid, name = "Depa prueba", type = "domestico" })).StatusCode);
+
+        var roomId = $"h_{Guid.NewGuid():N}"[..10];
+        object Room(int doorPos) => new
+        {
+            room = new
+            {
+                id = roomId, spaceType = "recamara", length = 400, width = 350, height = 260,
+                doors = new[] { new { id = "p1", wall = "sur", position = doorPos, width = 80 } },
+                windows = new[] { new { id = "v1", wall = "este", position = 100, width = 120, sillHeight = 90 } },
+                surfaces = new { floor = new { materialId = "piso_madera_001" }, walls = new { color = "beige" } }
+            },
+            requirements = new[] { new { id = "r1", priority = "obligatorio", type = "presupuesto_max", amount = 25000 } }
+        };
+
+        // Puerta que se sale de la pared (350 + 80 > 400): la API la rechaza
+        Assert.Equal(HttpStatusCode.BadRequest, (await Post($"/api/projects/{pid}/rooms", Room(350))).StatusCode);
+        Assert.Equal(HttpStatusCode.Created, (await Post($"/api/projects/{pid}/rooms", Room(20))).StatusCode);
+
+        var designId = $"d_{Guid.NewGuid():N}"[..10];
+        var room = (await Get($"/api/rooms/{roomId}"))!;
+        var created = await Post("/api/designs", new
+        {
+            schemaVersion = "1.0",
+            project = new { id = pid, name = "Depa prueba", type = "domestico" },
+            design = new { id = designId, name = "Diseno 1", style = "moderno", budgetMode = "ajustar", revision = 0 },
+            room = room["room"],
+            requirements = room["requirements"],
+            objects = Array.Empty<object>()
+        });
+        Assert.Equal(HttpStatusCode.Created, created.StatusCode);
+
+        // Agregar del catalogo: el motor elige el lugar
+        var cama = await Post($"/api/designs/{designId}/objects", new { catalogId = "cama_001" });
+        Assert.Equal(HttpStatusCode.OK, cama.StatusCode);
+        var state = JsonNode.Parse(await cama.Content.ReadAsStringAsync())!["state"]!;
+        Assert.Single(state["objects"]!.AsArray());
+        Assert.Equal("cama_1", state["objects"]![0]!["instanceId"]!.GetValue<string>());
+
+        // Una isla no va en una recamara
+        Assert.Equal(HttpStatusCode.Conflict, (await Post($"/api/designs/{designId}/objects", new { catalogId = "isla_001" })).StatusCode);
+
+        // Y se puede quitar
+        var quitar = await Post($"/api/designs/{designId}/proposals/apply", new { action = "quitar", instanceId = "cama_1" });
+        Assert.Equal(HttpStatusCode.OK, quitar.StatusCode);
+        Assert.Empty((await Get($"/api/designs/{designId}"))["objects"]!.AsArray());
+    }
+
+    [PostgresFact]
     public async Task Bloquear_desbloquear_y_configurar_color()
     {
         var copy = await Duplicate("d1");

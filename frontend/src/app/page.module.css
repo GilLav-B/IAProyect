@@ -22,6 +22,21 @@
   letter-spacing: -0.02em;
 }
 
+.newButton {
+  display: inline-block;
+  margin-top: 6px;
+  padding: 10px 16px;
+  border-radius: 10px;
+  background: var(--accent);
+  color: #fff;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.newButton:hover {
+  background: #1971c2;
+}
+
 .muted {
   color: var(--muted);
   font-weight: 400;

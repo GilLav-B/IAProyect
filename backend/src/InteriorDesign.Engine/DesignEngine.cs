@@ -333,6 +333,41 @@ public class DesignEngine(CatalogState catalog, Rules? rules = null)
     public Verdict Judge(DesignState s, Proposal proposal) =>
         ValidateProposal(s, proposal) is { } reasons ? Verdict.From(reasons) : Verdict.Invalid;
 
+    // ---------------------------------------------------------------- colocar un mueble nuevo
+
+    private static readonly HashSet<string> PositionReasons = ["fuera_de_habitacion", "colision_con", "bloquea_puerta", "bloquea_ventana"];
+
+    /// <summary>
+    /// Busca donde poner un producto nuevo: recorre la habitacion en una rejilla (cm) y las 4 rotaciones,
+    /// del centro hacia afuera, y devuelve la primera posicion sin motivos de colocacion.
+    /// Si el producto no se puede agregar por algo que no depende del lugar (presupuesto, categoria,
+    /// no cabe), devuelve el veredicto con esos motivos y sin posicion.
+    /// </summary>
+    public (AddProposal? Placement, Verdict Verdict) SuggestPlacement(DesignState s, string instanceId, string catalogId, int stepCm = 10)
+    {
+        var probe = Judge(s, new AddProposal(instanceId, catalogId, 0, 0, 0));
+        var blocking = probe.Reasons.Where(r => !PositionReasons.Contains(r.Name)).ToList();
+        if (blocking.Count > 0 || Product(catalogId) is not { } p)
+            return (null, Verdict.From(blocking.Count > 0 ? blocking : probe.Reasons));
+
+        double cx = s.Room.Length / 2.0, cy = s.Room.Width / 2.0;
+        var candidates =
+            from rot in new[] { 0, 90, 180, 270 }
+            let dims = Geometry.Rotated(rot, p.Dimensions.Width, p.Dimensions.Depth)
+            from x in Enumerable.Range(0, Math.Max(0, (s.Room.Length - dims.A) / stepCm) + 1).Select(i => i * stepCm)
+            from y in Enumerable.Range(0, Math.Max(0, (s.Room.Width - dims.B) / stepCm) + 1).Select(i => i * stepCm)
+            let dist = Math.Pow(x + dims.A / 2.0 - cx, 2) + Math.Pow(y + dims.B / 2.0 - cy, 2)
+            orderby dist, rot
+            select new AddProposal(instanceId, catalogId, x, y, rot);
+
+        foreach (var c in candidates)
+        {
+            var v = Judge(s, c);
+            if (v.Accepted) return (c, v);
+        }
+        return (null, Verdict.From([Term.A("sin_espacio_libre")]));
+    }
+
     // ---------------------------------------------------------------- similares y reemplazo
 
     /// <summary>similar/2: misma categoria y al menos un estilo en comun.</summary>

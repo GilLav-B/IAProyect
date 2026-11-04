@@ -46,3 +46,15 @@ Esto se aplica en la Fase 5 (`ai-rules/image-generator.md` y `safety-rules.md`) 
 - La TV y el cuadro "no ocupan piso" (como en `diseno.pl`): la TV se dibuja sobre el mueble que tiene debajo y el cuadro colgado
   a 1.50 m. Es solo visual; el motor no cambia.
 - Vista tipo "casa de munecas": los muros cercanos a la camara se ocultan solos. Vistas 3D y Planta.
+
+## Crear desde cero y acabados (2026-11-04)
+
+- Pagina `/nuevo`: proyecto -> habitacion (medidas, puertas, ventanas) -> acabados (color de muros, tipo de piso) -> requisitos
+  (presupuesto maximo obligatorio, estilo como preferencia, modo de presupuesto) -> primera version vacia.
+- [SUPUESTO] Rangos de medidas: largo y ancho de 1.50 a 20 m; alto de 2 a 6 m. Puertas y ventanas deben quedar dentro de su
+  pared y no encimarse (`RoomRules` en el motor; la interfaz avisa antes con las mismas reglas).
+- Espacios por tipo de proyecto como en `diseno.pl`: comercial = oficina; domestico = sala, recamara, cocina, comedor.
+- Los acabados (`surfaces`) son el estado ACTUAL del cuarto y son solo visuales: no suman al presupuesto. Los materiales de
+  remodelacion con costo por m2 siguen en `materials` del DesignState (rubro materiales).
+- Agregar un mueble: el motor busca el primer lugar libre valido (rejilla de 10 cm, 4 rotaciones, del centro hacia afuera).
+  Si no se puede por presupuesto, categoria o falta de espacio, responde con los motivos.

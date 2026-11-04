@@ -6,7 +6,7 @@ import { CameraControls, Environment } from "@react-three/drei";
 import type { DesignState, PlacedObject, Product } from "@/lib/types";
 import { cmToM, rotatedDims } from "@/lib/units";
 import { Furniture } from "./Furniture";
-import { HDRI } from "./materials";
+import { HDRI, type FloorKind } from "./materials";
 import { RoomShell } from "./RoomShell";
 
 export type ViewMode = "3d" | "planta";
@@ -16,6 +16,8 @@ interface Props {
   state: DesignState;
   /** 3d = perspectiva desde la esquina; planta = desde arriba. */
   view: ViewMode;
+  /** Tipo de piso (segun el material del catalogo elegido). */
+  floorKind?: FloorKind;
   products: Map<string, Product>;
   selectedId: string | null;
   conflictIds: Set<string>;
@@ -86,7 +88,7 @@ function CameraRig({ view, L, W, enabled }: { view: ViewMode; L: number; W: numb
   );
 }
 
-export function RoomScene({ state, view, products, selectedId, conflictIds, pendingIds, onSelect, onBlocked, onDrag }: Props) {
+export function RoomScene({ state, view, floorKind, products, selectedId, conflictIds, pendingIds, onSelect, onBlocked, onDrag }: Props) {
   const L = cmToM(state.room.length);
   const W = cmToM(state.room.width);
   const H = cmToM(state.room.height);
@@ -135,7 +137,7 @@ export function RoomScene({ state, view, products, selectedId, conflictIds, pend
         shadow-camera-far={span * 6}
       />
 
-      <RoomShell room={state.room} showZones={dragging || selectedId !== null} />
+      <RoomShell room={state.room} floorKind={floorKind} showZones={dragging || selectedId !== null} />
 
       {state.objects.map((o) => {
         const product = products.get(o.catalogId);

@@ -83,6 +83,9 @@ public record MoveDto(string InstanceId, int X, int Y, int Rotation);
 
 public record MoveBatchRequest(List<MoveDto> Moves);
 
+/// <summary>Agregar un producto del catalogo; instanceId opcional (si no viene se genera).</summary>
+public record AddObjectRequest(string CatalogId, string? InstanceId = null);
+
 public record MoveCheck(string InstanceId, VerdictDto Verdict);
 
 /// <summary>

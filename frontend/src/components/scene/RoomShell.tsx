@@ -4,9 +4,9 @@ import { Suspense } from "react";
 import { FrontSide, type Texture } from "three";
 import { useTexture } from "@react-three/drei";
 import type { Room, Wall } from "@/lib/types";
-import { cmToM } from "@/lib/units";
+import { cmToM, colorHex } from "@/lib/units";
 import { doorZone, planCenter, windowZone, type PlanRect } from "./geometry";
-import { TEXTURES, tile } from "./materials";
+import { FLOORS, TEXTURES, tile, type FloorKind } from "./materials";
 
 const DOOR_HEIGHT_CM = 210; // [SUPUESTO] alto de puerta para dibujarla
 const WINDOW_HEIGHT_CM = 120; // [SUPUESTO] alto de ventana si no viene en el DesignState
@@ -35,21 +35,32 @@ function wallFrame(room: Room, wall: Wall) {
 
 const WALLS: Wall[] = ["sur", "norte", "oeste", "este"];
 
-function Floor({ room }: { room: Room }) {
+function Floor({ room, kind }: { room: Room; kind: FloorKind }) {
   const L = cmToM(room.length);
   const W = cmToM(room.width);
-  const tex = useTexture(TEXTURES.floor, (t) => tile(t as unknown as Record<string, Texture>, 1));
-  // Una tabla de laminado ~1.2 m: se repite segun el tamano del cuarto
-  const repeat: [number, number] = [L / 1.6, W / 1.6];
+  const floor = FLOORS[kind];
+  const tex = useTexture(floor.textures, (t) => tile(t as unknown as Record<string, Texture>, 1));
+  // La textura se repite segun el tamano real del cuarto
+  const repeat: [number, number] = [L / floor.tileM, W / floor.tileM];
+  // Si se eligio un color de piso, tine la textura
+  const tint = room.surfaces?.floor?.color ? colorHex(room.surfaces.floor.color) : "#ffffff";
   return (
     <mesh position={[L / 2, 0, -W / 2]} rotation-x={-Math.PI / 2} receiveShadow>
       <planeGeometry args={[L, W]} />
-      <meshStandardMaterial {...tex} roughness={0.8} map-repeat={repeat} normalMap-repeat={repeat} roughnessMap-repeat={repeat} />
+      <meshStandardMaterial
+        {...tex}
+        color={tint}
+        roughness={floor.roughness}
+        map-repeat={repeat}
+        normalMap-repeat={repeat}
+        roughnessMap-repeat={repeat}
+      />
     </mesh>
   );
 }
 
 function Walls({ room }: { room: Room }) {
+  const wallColor = room.surfaces?.walls?.color ? colorHex(room.surfaces.walls.color) : WALL_COLOR;
   const H = cmToM(room.height);
   const tex = useTexture(TEXTURES.plaster, (t) => tile(t as unknown as Record<string, Texture>, 2));
   return (
@@ -62,7 +73,7 @@ function Walls({ room }: { room: Room }) {
             {/* Cara interior del muro */}
             <mesh position={[0, H / 2, 0]} receiveShadow>
               <planeGeometry args={[f.length, H]} />
-              <meshStandardMaterial {...tex} color={WALL_COLOR} roughness={0.95} side={FrontSide} />
+              <meshStandardMaterial {...tex} color={wallColor} roughness={0.95} side={FrontSide} />
             </mesh>
             {/* Zoclo */}
             <mesh position={[0, 0.04, 0.006]}>
@@ -103,7 +114,7 @@ function Zone({ rect, color }: { rect: PlanRect; color: string }) {
 }
 
 /** Piso, muros, puertas y ventanas. Son estructurales: no se seleccionan ni se mueven. */
-export function RoomShell({ room, showZones }: { room: Room; showZones: boolean }) {
+export function RoomShell({ room, showZones, floorKind = "madera" }: { room: Room; showZones: boolean; floorKind?: FloorKind }) {
   return (
     <group>
       <Suspense
@@ -114,7 +125,7 @@ export function RoomShell({ room, showZones }: { room: Room; showZones: boolean 
           </mesh>
         }
       >
-        <Floor room={room} />
+        <Floor room={room} kind={floorKind} />
         <Walls room={room} />
       </Suspense>
 

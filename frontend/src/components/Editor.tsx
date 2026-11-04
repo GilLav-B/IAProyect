@@ -4,9 +4,12 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { api, ApiError, API_URL } from "@/lib/api";
 import { describe } from "@/lib/reasons";
-import type { DesignState, Move, MoveBatchResult, Product, Proposal, Reason, ValidationReport } from "@/lib/types";
+import type { CatalogMaterial, DesignState, Move, MoveBatchResult, Product, Proposal, Reason, ValidationReport } from "@/lib/types";
 import { fmtM, fmtMoney, fmtRange, label } from "@/lib/units";
+import { AddFurniture } from "./AddFurniture";
 import { ConfigPanel } from "./ConfigPanel";
+import { Finishes } from "./Finishes";
+import { floorKindOf } from "./scene/materials";
 import { RoomScene, type ViewMode } from "./scene/RoomScene";
 import styles from "./Editor.module.css";
 
@@ -26,6 +29,7 @@ export function Editor({ designId }: { designId: string }) {
   const [state, setState] = useState<DesignState | null>(null);
   const [report, setReport] = useState<ValidationReport | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
+  const [materials, setMaterials] = useState<CatalogMaterial[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [draft, setDraft] = useState<Draft>({});
   const [check, setCheck] = useState<{ forDraft: Draft; result: MoveBatchResult } | null>(null);
@@ -43,12 +47,13 @@ export function Editor({ designId }: { designId: string }) {
 
   useEffect(() => {
     let cancelled = false;
-    Promise.all([api.design(designId), api.validation(designId), api.products()])
-      .then(([s, r, p]) => {
+    Promise.all([api.design(designId), api.validation(designId), api.products(), api.materials()])
+      .then(([s, r, p, m]) => {
         if (cancelled) return;
         setState(s);
         setReport(r);
         setProducts(p);
+        setMaterials(m);
       })
       .catch((e) => !cancelled && setLoadError(errorText(e)));
     return () => {
@@ -203,6 +208,35 @@ export function Editor({ designId }: { designId: string }) {
     }
   };
 
+  /** Agrega un producto del catalogo; el motor elige un lugar libre y valido. */
+  const addFurniture = async (catalogId: string) => {
+    setBusy(true);
+    try {
+      const res = await api.addObject(designId, catalogId);
+      if (res.ok) {
+        const before = new Set(state?.objects.map((o) => o.instanceId));
+        const added = res.result.state.objects.find((o) => !before.has(o.instanceId));
+        setState(res.result.state);
+        setReport(res.result.report);
+        if (added) setSelectedId(added.instanceId);
+        setMessage({ kind: "ok", text: `Agregado: ${productMap.get(catalogId)?.name}. Arrastralo para acomodarlo.` });
+      } else {
+        setMessage({ kind: "error", text: "No se pudo agregar", reasons: res.verdict.reasons });
+      }
+    } catch (e) {
+      setMessage({ kind: "error", text: errorText(e) });
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  /** Cambia un acabado de la habitacion (GET + PUT de la habitacion completa). */
+  const changeFinish = (part: "floor" | "walls", value: { materialId?: string; color?: string }) =>
+    void run(async () => {
+      const current = await api.room(state!.room.id);
+      await api.updateRoom(current.room.id, { ...current, room: { ...current.room, surfaces: { ...current.room.surfaces, [part]: value } } });
+    }, part === "walls" ? `Muros: ${label(value.color ?? "")}` : "Piso actualizado");
+
   if (loadError)
     return (
       <main className={styles.center}>
@@ -215,6 +249,7 @@ export function Editor({ designId }: { designId: string }) {
   const selected = shown.objects.find((o) => o.instanceId === selectedId) ?? null;
   const selectedProduct = selected ? productMap.get(selected.catalogId) : undefined;
   const canSave = hasDraft && !!currentCheck?.accepted && !busy;
+  const floorKind = floorKindOf(materials.find((m) => m.id === state.room.surfaces?.floor?.materialId)?.type);
 
   return (
     <div className={styles.layout}>
@@ -241,6 +276,7 @@ export function Editor({ designId }: { designId: string }) {
         <RoomScene
           view={view}
           state={shown}
+          floorKind={floorKind}
           products={productMap}
           selectedId={selectedId}
           conflictIds={conflictIds}
@@ -321,22 +357,31 @@ export function Editor({ designId }: { designId: string }) {
                 selected.locked ? `${selected.instanceId} desbloqueado` : `${selected.instanceId} bloqueado`,
               )
             }
+            onRemove={() => {
+              const id = selected.instanceId;
+              void propose({ action: "quitar", instanceId: id }, `Quitado: ${selectedProduct.name}`).then(() => setSelectedId(null));
+            }}
           />
         ) : (
-          <section className={styles.card}>
-            <p className={styles.muted}>Haz clic en un mueble para seleccionarlo.</p>
-            <ul className={styles.objectList}>
-              {shown.objects.map((o) => (
-                <li key={o.instanceId}>
-                  <button type="button" onClick={() => setSelectedId(o.instanceId)}>
-                    {o.locked ? "🔒 " : ""}
-                    {productMap.get(o.catalogId)?.name ?? o.catalogId}
-                    <span className={styles.mono}> {o.instanceId}</span>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </section>
+          <>
+            <section className={styles.card}>
+              <h3 className={styles.subtitle}>En el diseno ({shown.objects.length})</h3>
+              {shown.objects.length === 0 && <p className={styles.muted}>Todavia no hay muebles. Agrega del catalogo.</p>}
+              <ul className={styles.objectList}>
+                {shown.objects.map((o) => (
+                  <li key={o.instanceId}>
+                    <button type="button" onClick={() => setSelectedId(o.instanceId)}>
+                      {o.locked ? "🔒 " : ""}
+                      {productMap.get(o.catalogId)?.name ?? o.catalogId}
+                      <span className={styles.mono}> {o.instanceId}</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </section>
+            <AddFurniture spaceType={state.room.spaceType} products={products} disabled={busy || hasDraft} onAdd={(id) => void addFurniture(id)} />
+            <Finishes room={state.room} materials={materials} disabled={busy || hasDraft} onChange={changeFinish} />
+          </>
         )}
 
         <section className={styles.card}>

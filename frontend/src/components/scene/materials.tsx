@@ -15,15 +15,30 @@ export const TEXTURES = {
     normalMap: `${T}/oak_veneer_01_nor_gl.jpg`,
     roughnessMap: `${T}/oak_veneer_01_rough.jpg`,
   },
-  floor: {
-    map: `${T}/laminate_floor_02_diffuse.jpg`,
-    normalMap: `${T}/laminate_floor_02_nor_gl.jpg`,
-    roughnessMap: `${T}/laminate_floor_02_rough.jpg`,
-  },
   plaster: { normalMap: `${T}/white_plaster_02_nor_gl.jpg`, roughnessMap: `${T}/white_plaster_02_rough.jpg` },
 };
 
 export const HDRI = "/assets/hdri/brown_photostudio_02_1k.hdr";
+
+const pbr = (id: string) => ({
+  map: `${T}/${id}_diffuse.jpg`,
+  normalMap: `${T}/${id}_nor_gl.jpg`,
+  roughnessMap: `${T}/${id}_rough.jpg`,
+});
+
+/** Tipos de piso (tipo de material del catalogo) -> textura y cada cuantos metros se repite. */
+export const FLOORS = {
+  madera: { textures: pbr("laminate_floor_02"), tileM: 1.6, roughness: 0.8 },
+  ceramica: { textures: pbr("floor_tiles_06"), tileM: 1.2, roughness: 0.45 },
+  marmol: { textures: pbr("marble_01"), tileM: 2.4, roughness: 0.25 },
+  concreto: { textures: pbr("brushed_concrete_2"), tileM: 2.4, roughness: 0.7 },
+} as const;
+
+export type FloorKind = keyof typeof FLOORS;
+
+/** Tipo de piso a partir del tipo de material del catalogo (madera por defecto). */
+export const floorKindOf = (materialType?: string): FloorKind =>
+  materialType && materialType in FLOORS ? (materialType as FloorKind) : "madera";
 
 /** Repite la textura (para que la tela o la madera no se vean estiradas). */
 export function tile(textures: Record<string, Texture>, repeat: number) {

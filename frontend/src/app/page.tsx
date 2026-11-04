@@ -32,6 +32,9 @@ export default function Home() {
           Abre una version para editarla en 3D. Cada cambio pasa por el motor de reglas: medidas reales, puertas, ventanas y
           presupuesto.
         </p>
+        <Link href="/nuevo" className={styles.newButton}>
+          + Nuevo proyecto desde cero
+        </Link>
       </header>
 
       {error && <p className={styles.error}>{error}</p>}

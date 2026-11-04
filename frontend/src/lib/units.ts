@@ -27,7 +27,17 @@ const COLORS: Record<string, string> = {
   cafe: "#7b5332",
   verde: "#4f8b52",
   dorado: "#c9a64a",
+  // Colores de muro
+  blanco_hueso: "#efe9dd",
+  arena: "#d9c9ad",
+  gris_claro: "#cfcfca",
+  verde_salvia: "#aebba4",
+  azul_claro: "#bccbd6",
+  terracota: "#c98d6e",
 };
+
+/** [SUPUESTO] paleta de pintura para muros. */
+export const WALL_COLORS = ["blanco_hueso", "blanco", "arena", "gris_claro", "verde_salvia", "azul_claro", "terracota"];
 
 export const colorHex = (name?: string) => (name && COLORS[name]) || "#9aa3ad";
 

@@ -2,6 +2,7 @@ using InteriorDesign.Api.Services;
 using InteriorDesign.Domain;
 using InteriorDesign.Domain.Entities;
 using InteriorDesign.Domain.State;
+using InteriorDesign.Engine;
 using InteriorDesign.Infrastructure.Mapping;
 using InteriorDesign.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -73,6 +74,7 @@ public static class ProjectEndpoints
         {
             if (!await db.Projects.AnyAsync(p => p.Id == projectId, ct)) return Results.NotFound($"No existe el proyecto {projectId}.");
             var errors = svc.SchemaErrors("room", req.Room).Concat(svc.SchemaErrors("requirements", req.Requirements)).ToList();
+            if (errors.Count == 0) errors.AddRange(RoomRules.Validate(req.Room));
             if (errors.Count > 0) return Results.ValidationProblem(new Dictionary<string, string[]> { ["room"] = [.. errors] });
             if (await db.Rooms.AnyAsync(r => r.Id == req.Room.Id, ct)) return Results.Conflict($"Ya existe la habitacion {req.Room.Id}.");
             db.Rooms.Add(StateMapper.ToEntity(req.Room, projectId, req.Requirements));
@@ -93,6 +95,7 @@ public static class ProjectEndpoints
         {
             if (req.Room.Id != id) return Results.BadRequest("El id del cuerpo no coincide con la ruta.");
             var errors = svc.SchemaErrors("room", req.Room).Concat(svc.SchemaErrors("requirements", req.Requirements)).ToList();
+            if (errors.Count == 0) errors.AddRange(RoomRules.Validate(req.Room));
             if (errors.Count > 0) return Results.ValidationProblem(new Dictionary<string, string[]> { ["room"] = [.. errors] });
             var current = await LoadRoom(db, id, ct, tracking: true);
             if (current is null) return Results.NotFound();

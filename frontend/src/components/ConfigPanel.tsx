@@ -21,6 +21,7 @@ interface Props {
   onColor: (color: string) => void;
   onMaterial: (material: string) => void;
   onToggleLock: () => void;
+  onRemove: () => void;
 }
 
 /** Panel tipo configurador de vehiculos: modelo, color, material y precio del objeto seleccionado. */
@@ -131,6 +132,11 @@ export function ConfigPanel(p: Props) {
         </button>
         <button type="button" onClick={p.onToggleLock} disabled={configLocked} className={obj.locked ? styles.locked : undefined}>
           {obj.locked ? "🔒 Bloqueado" : "🔓 Libre"}
+        </button>
+      </div>
+      <div className={styles.actions}>
+        <button type="button" className={styles.danger} onClick={p.onRemove} disabled={configLocked || obj.locked}>
+          Quitar del diseno
         </button>
       </div>
       <p className={styles.hint}>

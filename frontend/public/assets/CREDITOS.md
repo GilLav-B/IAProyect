@@ -11,7 +11,10 @@ Se descargan y optimizan con `npm run assets` (ver `scripts/fetch-assets.mjs`).
 | models/wooden_display_shelves_01.glb | Wooden Display Shelves 01 | librero |
 | models/metal_office_desk.glb | Metal Office Desk | escritorio |
 | models/potted_plant_01.glb | Potted Plant 01 | planta |
-| textures/laminate_floor_02_* | Laminate Floor 02 | piso |
+| textures/laminate_floor_02_* | Laminate Floor 02 | piso de madera |
+| textures/floor_tiles_06_* | Floor Tiles 06 | piso ceramico |
+| textures/marble_01_* | Marble 01 | piso de marmol |
+| textures/brushed_concrete_2_* | Brushed Concrete 2 | concreto pulido |
 | textures/white_plaster_02_* | White Plaster 02 | muros |
 | textures/cotton_jersey_* | Cotton Jersey | telas (sofa, cama, sillas) |
 | textures/oak_veneer_01_* | Oak Veneer 01 | madera de muebles |

@@ -34,6 +34,35 @@ export interface Room {
   doors: Door[];
   windows: Window[];
   columns: { id: string; x: number; y: number; width: number; depth: number }[];
+  measurementSource?: string;
+  /** Acabados actuales: piso (material del catalogo y/o color) y color de muros. */
+  surfaces?: {
+    floor?: { materialId?: string; color?: string };
+    walls?: { materialId?: string; color?: string };
+    ceiling?: { materialId?: string; color?: string };
+  };
+}
+
+/** Material del catalogo (pisos, pintura...). */
+export interface CatalogMaterial {
+  id: string;
+  type: string;
+  name: string;
+  pricePerM2: PriceRange;
+}
+
+export interface Requirement {
+  id: string;
+  priority: "obligatorio" | "importante" | "preferencia" | "opcional";
+  type: "presupuesto_max" | "tiene" | "conservar" | "estilo" | "color" | "categoria";
+  amount?: number;
+  category?: string;
+  attribute?: string;
+  value?: string | number;
+  element?: string;
+  style?: string;
+  color?: string;
+  description?: string;
 }
 
 export interface PlacedObject {
@@ -57,6 +86,7 @@ export interface DesignState {
     revision: number;
   };
   room: Room;
+  requirements?: Requirement[];
   objects: PlacedObject[];
   budget?: { total: PriceRange; effectiveCap?: number };
 }
@@ -138,4 +168,11 @@ export interface MoveBatchResult {
 
 export type Proposal =
   | { action: "mover"; instanceId: string; x: number; y: number; rotation: number }
-  | { action: "reemplazar"; instanceId: string; catalogId: string };
+  | { action: "reemplazar"; instanceId: string; catalogId: string }
+  | { action: "quitar"; instanceId: string };
+
+/** Habitacion + requisitos, como la manda y recibe /api/rooms. */
+export interface RoomWithRequirements {
+  room: Room;
+  requirements: Requirement[];
+}

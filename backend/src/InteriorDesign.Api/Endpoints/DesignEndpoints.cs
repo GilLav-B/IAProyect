@@ -12,6 +12,16 @@ public static class DesignEndpoints
     private static IResult Problems(string key, IEnumerable<string> errors) =>
         Results.ValidationProblem(new Dictionary<string, string[]> { [key] = errors.ToArray() });
 
+    /// <summary>instanceId nuevo y legible: categoria_N (ej. planta_2), unico dentro de la version.</summary>
+    private static string NewInstanceId(string category, DesignState s)
+    {
+        for (var n = 1; ; n++)
+        {
+            var candidate = $"{category}_{n}";
+            if (s.Objects.All(o => o.InstanceId != candidate)) return candidate;
+        }
+    }
+
     public static void MapDesigns(this IEndpointRouteBuilder app)
     {
         var g = app.MapGroup("/api/designs").WithTags("Disenos (versiones)");
@@ -22,6 +32,7 @@ public static class DesignEndpoints
         {
             state.Budget = null;
             var errors = svc.SchemaErrors(state);
+            if (errors.Count == 0) errors.AddRange(RoomRules.Validate(state.Room));
             if (errors.Count > 0) return Problems("designState", errors);
             var engine = await svc.EngineAsync(ct);
             var refs = DesignService.ReferenceErrors(state, engine);
@@ -150,6 +161,19 @@ public static class DesignEndpoints
             saved.Budget = x.Engine.Budget(saved);
             return Results.Ok(new MoveBatchResult(true, checks, ValidationReport.From(x.Engine, saved), saved));
         }).WithSummary("Lote de movimientos del editor. dryRun=true solo revisa (para pintar en vivo); sin dryRun guarda solo si TODOS son validos (si no, 409).");
+
+        g.MapPost("/{id}/objects", async (string id, AddObjectRequest req, DesignService svc, CancellationToken ct) =>
+        {
+            if (await svc.LoadAsync(id, ct) is not { } x) return Results.NotFound();
+            if (x.Engine.Product(req.CatalogId) is not { } product) return Results.BadRequest($"El producto {req.CatalogId} no existe.");
+            var instanceId = req.InstanceId ?? NewInstanceId(product.Category, x.State);
+            var (placement, verdict) = x.Engine.SuggestPlacement(x.State, instanceId, req.CatalogId);
+            if (placement is null) return Results.Conflict(VerdictDto.From(verdict));
+            var (next, changed) = ProposalApplier.Apply(x.State, placement, x.Engine);
+            var saved = await svc.Repo.SaveAsync(next, placement.ToTerm().ToString(), changed, null, ct);
+            saved.Budget = x.Engine.Budget(saved);
+            return Results.Ok(new ApplyResult(VerdictDto.From(verdict), saved, ValidationReport.From(x.Engine, saved)));
+        }).WithSummary("Agrega un producto del catalogo: el motor busca el primer lugar libre valido (del centro hacia afuera). Si no se puede (presupuesto, categoria, sin espacio) -> 409 con motivos.");
 
         // ---------------- objetos ----------------
 

@@ -30,7 +30,10 @@ const MODELS = [
 
 /** Texturas: [id, mapas]. Diffuse = color, nor_gl = relieve, Rough = rugosidad. */
 const TEXTURES = [
-  ["laminate_floor_02", ["Diffuse", "nor_gl", "Rough"]], // piso
+  ["laminate_floor_02", ["Diffuse", "nor_gl", "Rough"]], // piso de madera
+  ["floor_tiles_06", ["Diffuse", "nor_gl", "Rough"]], // piso ceramico
+  ["marble_01", ["Diffuse", "nor_gl", "Rough"]], // piso de marmol
+  ["brushed_concrete_2", ["Diffuse", "nor_gl", "Rough"]], // concreto pulido
   ["white_plaster_02", ["nor_gl", "Rough"]], // muros (el color lo pone la escena)
   ["cotton_jersey", ["nor_gl", "Rough"]], // telas (el color lo pone el configurador)
   ["oak_veneer_01", ["Diffuse", "nor_gl", "Rough"]], // madera de muebles
