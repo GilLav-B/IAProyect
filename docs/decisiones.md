@@ -100,7 +100,18 @@ espacio del usuario siguiendo ese diseno. Propuesta de flujo (se confirma al lle
    respetando las medidas reales del cuarto del usuario.
 4. El motor valida cada propuesta (agregar/mover/reemplazar). Lo rechazado se corrige o se le explica al usuario.
 5. Se crea una version nueva ("Basado en referencia") para no tocar las existentes; el usuario decide si la conserva.
-6. La imagen de referencia y cualquier imagen generada son solo ayuda visual (ver la seccion de imagenes).
+6. Se muestra **como podria quedar la habitacion final** con imagenes de ejemplo: render de Blender (exacto, del DesignState)
+   y, opcionalmente, imagenes generadas por IA a partir de ese render (ayuda visual, con su leyenda).
+7. La imagen de referencia y cualquier imagen generada son solo ayuda visual (ver la seccion de imagenes).
+
+Objetivo acordado: copiar el diseno de referencia **lo mejor posible**, siempre dentro de las medidas reales, el presupuesto
+y los requisitos del usuario.
+
+## Mas modelos 3D al final (2026-11-05)
+
+Cuando la funcionalidad y el diseno de la plataforma esten terminados, se agrega una ronda de **mas modelos 3D** (muebles,
+decoracion, iluminacion, variantes por estilo) para que el visor se vea mejor. Se siguen bajando con `npm run assets`
+(Poly Haven CC0) o, si hay proveedores reales, con el modelo 3D de cada producto (`asset3D`).
 
 ## Catalogo ampliado (2026-11-04)
 
