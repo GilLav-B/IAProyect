@@ -61,7 +61,7 @@ public class DataModelTests
         Assert.Equal(
             new[]
             {
-                "design_history", "design_materials", "design_objects", "designs", "materials",
+                "ai_jobs", "design_history", "design_materials", "design_objects", "designs", "materials",
                 "products", "projects", "providers", "requirements", "room_columns",
                 "room_doors", "room_windows", "rooms"
             },

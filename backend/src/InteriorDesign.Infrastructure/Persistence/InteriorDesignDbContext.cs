@@ -18,6 +18,7 @@ public class InteriorDesignDbContext(DbContextOptions<InteriorDesignDbContext> o
     public DbSet<DesignObject> DesignObjects => Set<DesignObject>();
     public DbSet<DesignMaterial> DesignMaterials => Set<DesignMaterial>();
     public DbSet<DesignHistoryEntry> DesignHistory => Set<DesignHistoryEntry>();
+    public DbSet<AiJob> AiJobs => Set<AiJob>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder) =>
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(InteriorDesignDbContext).Assembly);

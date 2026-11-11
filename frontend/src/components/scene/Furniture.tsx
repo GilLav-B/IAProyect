@@ -185,6 +185,8 @@ export function Furniture({ obj, product, elevationCm, selected, inConflict, pen
 
   return (
     <group
+      // Mismo instanceId que en el DesignState y en Blender (tambien nombra el nodo al exportar GLB)
+      name={obj.instanceId}
       position={center}
       onPointerDown={handleDown}
       onPointerMove={handleMove}

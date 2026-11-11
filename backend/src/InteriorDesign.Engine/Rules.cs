@@ -14,6 +14,8 @@ public class Rules
     public decimal MaxOccupancy { get; init; } = 0.6m;
     /// <summary>[SUPUESTO] margen extra en modo de presupuesto flexible.</summary>
     public decimal FlexibleMargin { get; init; } = 0.10m;
+    /// <summary>parametro(desperdicio_material, 0.10). Confirmado por el usuario (2026-11-11): 10%.</summary>
+    public decimal MaterialWaste { get; init; } = 0.10m;
 
     public IReadOnlyDictionary<string, string> CategoryBudget { get; init; } = new Dictionary<string, string>
     {

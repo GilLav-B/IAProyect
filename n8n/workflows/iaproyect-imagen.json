@@ -1,0 +1,183 @@
+{
+  "id": "IAProyImagen0001",
+  "name": "IAProyect - Imagenes (render realista y como quedaria)",
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataSuccessExecution": "none",
+    "saveDataErrorExecution": "all"
+  },
+  "nodes": [
+    {
+      "id": "9a4b6c1d-2e3f-4a5b-8c7d-1a2b3c4d5e01",
+      "name": "Recibir trabajo",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "iaproyect-imagen",
+        "responseMode": "onReceived",
+        "options": {
+          "responseCode": 202
+        }
+      },
+      "webhookId": "9a4b6c1d-2e3f-4a5b-8c7d-1a2b3c4d5e02",
+      "notes": "Lo llama la API (.NET) con: jobId, callbackUrl, mode (render|libre), state, products y opcionales visible, note, imageDataUrl. La imagen es solo ayuda visual, no exacta."
+    },
+    {
+      "id": "9a4b6c1d-2e3f-4a5b-8c7d-1a2b3c4d5e02",
+      "name": "Avisar inicio",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        240,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.body.callbackUrl }}/progress",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Callback-Secret",
+              "value": "={{ $env.N8N_CALLBACK_SECRET }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ progress: 15, message: \"Generando la imagen con IA (alrededor de un minuto)\" }) }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "9a4b6c1d-2e3f-4a5b-8c7d-1a2b3c4d5e03",
+      "name": "Servicio de IA (Python)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        480,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ ($env.AI_SERVICE_URL || 'http://127.0.0.1:8100') + '/ai/image' }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ (() => { const b = $('Recibir trabajo').item.json.body; return JSON.stringify({ mode: b.mode, state: b.state, products: b.products, visible: b.visible, note: b.note, imageDataUrl: b.imageDataUrl }); })() }}",
+        "options": {
+          "timeout": 360000
+        }
+      },
+      "onError": "continueErrorOutput",
+      "notes": "ai-service hace la IA (prompts con /ai-rules, OpenAI, Blender) y regresa { ok, data, error }."
+    },
+    {
+      "id": "9a4b6c1d-2e3f-4a5b-8c7d-1a2b3c4d5e04",
+      "name": "Servicio no respondio",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        720,
+        120
+      ],
+      "parameters": {
+        "jsCode": "// Why Code: mensaje corto para el usuario cuando ai-service no responde o truena.\nconst e = $json.error ?? {};\nconst detail = e.description || e.message || 'sin respuesta';\nreturn [{ json: { ok: false, error: `El servicio de IA (Python) fallo: ${String(detail).slice(0, 300)}` } }];"
+      }
+    },
+    {
+      "id": "9a4b6c1d-2e3f-4a5b-8c7d-1a2b3c4d5e05",
+      "name": "Regresar resultado",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        960,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Recibir trabajo').item.json.body.callbackUrl }}/result",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Callback-Secret",
+              "value": "={{ $env.N8N_CALLBACK_SECRET }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ ok: $json.ok, data: $json.data ?? null, error: $json.error ?? null }) }}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 2000,
+      "notes": "La API valida con el motor todo lo que propuso la IA antes de aplicarlo."
+    }
+  ],
+  "connections": {
+    "Recibir trabajo": {
+      "main": [
+        [
+          {
+            "node": "Avisar inicio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Avisar inicio": {
+      "main": [
+        [
+          {
+            "node": "Servicio de IA (Python)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Servicio de IA (Python)": {
+      "main": [
+        [
+          {
+            "node": "Regresar resultado",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Servicio no respondio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Servicio no respondio": {
+      "main": [
+        [
+          {
+            "node": "Regresar resultado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

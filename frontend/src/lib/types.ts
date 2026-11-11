@@ -214,3 +214,97 @@ export interface RoomWithRequirements {
   room: Room;
   requirements: Requirement[];
 }
+
+// ---------- IA (Fase 5) ----------
+
+export type AiJobType = "referencia" | "chat" | "imagen" | "diseno" | "blender";
+export type AiJobStatus = "pendiente" | "en_proceso" | "completado" | "fallido";
+
+/** Resultado de una propuesta de la IA despues de pasar por el motor. */
+export interface AiOutcome {
+  action: string;
+  instanceId?: string | null;
+  catalogId?: string | null;
+  productName?: string | null;
+  reason?: string | null;
+  applied: boolean;
+  verdict: string;
+  reasons: Reason[];
+  validated?: string | null;
+}
+
+export interface AiJobResult {
+  summary?: string | null;
+  style?: string | null;
+  outcomes?: AiOutcome[];
+  /** chat: cuantas propuestas aceptaria el motor */
+  applicable?: number;
+  /** referencia: cuantas se aplicaron en la version nueva */
+  applied?: number;
+  newDesignId?: string;
+  /** imagen */
+  imageUrl?: string;
+  caption?: string;
+  /** blender: render por vista y archivo .blend (rutas /files/...) */
+  images?: { view: string; url: string; seconds: number }[];
+  blendUrl?: string;
+  seconds?: number;
+}
+
+export interface AiJob {
+  id: string;
+  type: AiJobType;
+  designId: string;
+  resultDesignId?: string | null;
+  status: AiJobStatus;
+  progress: number;
+  message?: string | null;
+  result?: AiJobResult | null;
+  error?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  /** imagen: "render" = desde captura del visor; sin valor = imagen libre. */
+  mode?: string | null;
+  /** Lote de vistas del visor (las 4 burbujas) y numero de vista. */
+  batch?: string | null;
+  view?: number | null;
+}
+
+/** Renglon de lista_compras/2 (con precio para el reporte). */
+export interface ShoppingItem {
+  rubro: string;
+  catalogId: string;
+  name: string;
+  kind: string;
+  quantity: number;
+  unitMin: number;
+  unitMax: number;
+  totalMin: number;
+  totalMax: number;
+}
+
+/** Renglon de lista_materiales/2: m2 del diseno y m2 a comprar con desperdicio. */
+export interface MaterialItem {
+  materialId: string;
+  name: string;
+  type: string;
+  m2: number;
+  m2WithWaste: number;
+  priceM2Min: number;
+  priceM2Max: number;
+  totalMin: number;
+  totalMax: number;
+}
+
+export interface DesignLists {
+  shopping: ShoppingItem[];
+  materials: MaterialItem[];
+  wasteFactor: number;
+}
+
+export interface AiApplyResult {
+  state: DesignState;
+  report: ValidationReport;
+  outcomes: AiOutcome[];
+  applied: number;
+}

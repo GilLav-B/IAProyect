@@ -121,3 +121,122 @@ decoracion, iluminacion, variantes por estilo) para que el visor se vea mejor. S
 - Al arrancar (Development) la API agrega a la BD los productos de ejemplo que falten y llena `asset3D`; no borra ni cambia
   precios ni productos editados a mano.
 - Cuando haya proveedores reales, se reemplazan con un adaptador (json/csv) por proveedor.
+
+## IA y n8n (Fase 5, 2026-11-05)
+
+Flujo: **API crea un trabajo -> n8n llama a OpenAI -> n8n regresa el resultado a la API -> el motor valida -> el frontend
+ve el avance en vivo (SSE)**. n8n no toca nada en tiempo real (mover, rotar, colores siguen directo en el frontend).
+
+- Trabajos (`ai_jobs`): `referencia` (copiar un diseno de internet), `chat` (instruccion en texto) e `imagen` (como quedaria).
+  Estados `pendiente -> en_proceso -> completado | fallido`, con progreso 0-100.
+- Flujos de n8n en `n8n/workflows/` (webhooks `iaproyect-propuestas` e `iaproyect-imagen`). Se importan con
+  `n8n import:workflow --separate --input=n8n\workflows` y se publican con `n8n publish:workflow --id=...`.
+- n8n regresa el resultado a `/api/ai/jobs/{id}/progress|result` con el header `X-Callback-Secret` (`N8N_CALLBACK_SECRET`
+  del `.env`). Sin ese secreto la API responde 401.
+- La API key de OpenAI **solo** esta en el `.env`; `n8n/start-n8n.ps1` la pasa a n8n como variable de entorno y los flujos la
+  leen con `{{ $env.OPENAI_API_KEY }}`. No hay claves en los JSON del repo.
+- Modelos (configurables en `.env`): `OPENAI_MODEL=gpt-5.4-mini` (propuestas, con JSON schema estricto) y
+  `OPENAI_IMAGE_MODEL=gpt-image-2` (imagenes 1536x1024).
+- La IA responde `{summary, style, proposals[]}` con acciones `agregar | mover | reemplazar | quitar` (nunca
+  `modificar_estructura`). `AiPlan` las aplica en orden sobre una copia y **cada una pasa por el motor**; lo rechazado no
+  se aplica y se le muestra al usuario con el motivo. Si "agregar" no trae lugar o el lugar choca, el motor busca uno libre.
+  Propuestas que no cambian nada (reemplazar por el mismo producto, mover al mismo lugar) se marcan `sin_cambio`.
+- `referencia`: crea una **version nueva** "Basado en referencia"; la original no se toca. `chat`: solo simula; el usuario
+  aplica con "Aplicar lo valido" (se revalida contra el diseno actual y queda en el historial, se puede deshacer).
+- `imagen`: se guarda en `storage/renders/` y se sirve en `/files/renders/...`, siempre con la leyenda "Imagen de referencia
+  generada por IA. No representa medidas ni productos exactos."
+- Reglas para la IA en `ai-rules/` (global, safety-rules, interior-designer, spatial-analysis, furniture-selector,
+  budget-manager, image-generator, blender-generator).
+
+## Render realista con IA desde la vista 3D (2026-11-05)
+
+- El usuario pidio que el render sea con IA y lo mas parecido a una foto real. Se decidio **no** migrar el backend a
+  Python: el render con IA lo hace OpenAI (via n8n) y C# solo lo coordina y lo guarda.
+- "Render de esta vista": el frontend captura lo que se ve en el visor 3D (JPEG) y la API la manda a n8n, que usa
+  `/v1/images/edits` con `gpt-image-2` para convertirla en foto **sin mover nada** (mismo punto de vista, mismos muebles,
+  mismo lugar). Solo se dibuja lo que entra en el encuadre. Si no hay captura se usa `/v1/images/generations` ("Imagen libre").
+- Vista nueva **Foto** en el visor: camara a 1.55 m (altura de los ojos) dentro del cuarto, lente de 62 grados.
+- Sigue siendo ayuda visual con su leyenda; el DesignState es la fuente de verdad.
+- Pendiente acordado (en este orden): 2) que la IA llene el espacio por estilo (incluye elementos conceptuales);
+  3) que la IA sugiera cambios estructurales que el usuario confirma.
+
+## 4 vistas realistas en burbujas (2026-11-05)
+
+- Pedido del usuario: al terminar el diseno, 4 imagenes pequenas arriba a la derecha del visor para ver como quedaria de
+  forma hiperrealista. Se generan **solo con el boton** "Vistas realistas" (cada lote = 4 imagenes de OpenAI).
+- El visor captura 4 vistas a la altura de los ojos desde las esquinas (suroeste, sureste, noreste, noroeste) sin que la
+  camara del usuario se mueva; cada una va a `/ai/render` con el mismo `batch` y su `view`. Se muestra el ultimo lote de
+  la version; clic en una burbuja = vista grande (flechas y Esc), siempre con la leyenda de imagen de referencia.
+- Siguiente (acordado): 3D en tiempo real mas realista; despues "Disenar con IA" (la IA arma un diseno propio).
+
+## 3D en tiempo real mas realista (2026-11-05)
+
+- Se instalo `@react-three/postprocessing` 3.2.2 (+ `postprocessing` 6.39) con permiso del usuario.
+- Efectos: oclusion ambiental **SSAO** (sombras suaves en esquinas y bajo los muebles), brillo leve (ventana, lamparas),
+  tono ACES y vineta suave. N8AO **no** se usa: la version 2.0.1 (la ultima) falla con three 0.187.
+- Luz: el "sol" entra desde afuera de la primera ventana hacia el centro del cuarto; cada lampara del diseno tiene una
+  luz calida. Techo que solo se ve desde dentro (vista Foto); en 3D y Planta no estorba.
+- Las capturas para las burbujas y el render pasan por los mismos efectos, para que se vean igual que el visor.
+
+## Render fiel al modelo 3D (2026-11-05)
+
+- Problema reportado: las imagenes de IA no seguian el diseno 3D (inventaban decoracion, p. ej. una planta).
+- Causa: al prompt se le mandaban TODOS los muebles del diseno, aunque no salieran en la captura.
+- Arreglo: el visor calcula por captura que muebles salen en cuadro (caja de cada mueble proyectada a la camara) y en que
+  parte (izquierda/centro/derecha, cerca/media/fondo, cortado por el borde). La API manda a la IA SOLO esa lista, con
+  "se ven EXACTAMENTE N muebles", y prohibe agregar decoracion o mover/cambiar muebles. La nota del usuario solo cambia
+  ambiente (luz/hora). `gpt-image-2` no acepta `input_fidelity` (ya trabaja con fidelidad alta).
+- Limite conocido: no detecta si un mueble queda tapado por otro (se cuenta como visible).
+
+## Calidad de imagen y aspecto realista (2026-11-05)
+
+- Problema reportado: las imagenes se veian "plasticas". Causas: (1) OpenAI regresaba calidad baja por defecto
+  (~158 tokens de imagen) y (2) el prompt pedia copiar la captura tal cual, asi que copiaba las cajas de los muebles sin
+  modelo 3D, el techo oscuro y las sombras negras.
+- Arreglo: `quality` configurable en `.env` (`OPENAI_IMAGE_QUALITY`, por defecto `high`: ~5,500 tokens de imagen,
+  ~1 minuto por imagen, mas caro). El prompt separa **acomodo** (estricto: posicion, tamano, orientacion, color, cantidad)
+  de **aspecto** (cada caja se dibuja como el producto real descrito; techo blanco; luz natural; materiales con detalle).
+- Techo del visor con un poco de emision para que la captura no salga oscura.
+
+## Fase 6: Blender (2026-11-05)
+
+- Alcance acordado: **solo interiores** (fachadas quedan fuera).
+- `blender/build_scene.py` (corre dentro de Blender 4.3): DesignState validado + catalogo -> cuarto con huecos reales
+  de puertas y ventanas, piso/muros/techo con las texturas PBR del visor, muebles, luces, camara -> `.blend` + render
+  Cycles. Cada mueble es un Empty con el **mismo instanceId** del DesignState (y sus propiedades `instanceId`, `catalogId`).
+- Muebles: con `asset3D` se importa el mismo GLB del visor y se ajusta EXACTO a ancho x fondo x alto (igual que
+  ModelAsset.tsx); sin GLB se arman pieza por pieza igual que `Procedural.tsx`. TV sobre su mueble y cuadro colgado igual
+  que en el visor (solo visual). Colores: se leen de la tabla COLORS de `frontend/src/lib/units.ts` (una sola fuente).
+- Luz: cielo Nishita + sol que entra por la primera ventana, portales de luz en las ventanas, relleno suave del techo y
+  luz calida en cada lampara. Vidrio transparente para las sombras (deja pasar el sol). Tono AgX.
+- Materiales con proyeccion de caja en coordenadas de objeto (no necesitan UV). Relieve con Bump (no normal map:
+  sin tangentes de UV deja manchas negras).
+- `blender/render_design.ps1 -DesignId d1 [-Views all] [-Samples 64]` baja el diseno y el catalogo de la API y deja todo
+  en `storage/blender/<id>/` (fuera del repo).
+- Equipo del usuario: Intel Iris Xe (sin NVIDIA) -> Cycles en CPU. Referencia medida: 800x500 a 32 muestras ~ 40 s.
+
+## IA en Python, Fase 7 y cierre (2026-11-11)
+
+- **Decision del usuario:** todo el procesamiento de IA va en Python. Se eligio "servicio Python + n8n": `ai-service/`
+  (FastAPI, 127.0.0.1:8100) arma los prompts con `/ai-rules`, llama a OpenAI (propuestas e imagenes), corre Blender y genera
+  las exportaciones. n8n solo orquesta (ya no necesita la key de OpenAI). C# conserva datos, motor, versiones y listas, y ya
+  no arma prompts (`AiContext` solo junta los datos que se mandan).
+- El `.env` del proyecto tiene prioridad sobre las variables de Windows (habia una `OPENAI_API_KEY` vieja en el usuario y
+  OpenAI respondia 401). En un 401 no se reenvia el mensaje de OpenAI porque repite parte de la key.
+- **Disenar con IA** (`POST /api/designs/{id}/ai/design`): el motor quita todo lo no bloqueado (lo obligatorio, como la TV
+  de 75", se queda), la IA propone solo "agregar" del estilo elegido y cada mueble pasa por el motor; se crea una version
+  nueva "Diseno IA (estilo)". El estilo final es el que pidio el usuario, no el que diga la IA.
+- **Blender desde la pagina** (`POST /api/designs/{id}/blender`): trabajo asincrono tipo `blender`; calidad rapida
+  (800x500, 32 muestras, ~1 min por vista) o alta (1280x800, 64 muestras, ~3-4 min). Avance por vista. Las rutas que
+  regresa el servicio se validan (sin `..`) y se sirven en `/files/...` (incluye `.blend`).
+- **Fase 7:** desperdicio 10% confirmado por el usuario (`Rules.MaterialWaste`). `lista_compras` y `lista_materiales`
+  estan en el motor (`Lists.cs`) y se comparan contra Prolog. El subtotal de materiales usa los m2 a comprar (con
+  desperdicio); el presupuesto sigue usando los m2 del diseno, igual que `presupuesto_rubro/4`. Formatos elegidos: PDF del
+  reporte, Excel (y CSV), plano 2D en SVG y PDF, modelo 3D en GLB (desde el visor) y `.blend` (del ultimo render).
+- **Arreglos encontrados al cerrar:**
+  - `next build` fallaba en `/nuevo` (three.js genera ids aleatorios al prerenderizar): la pagina se carga solo en cliente.
+  - El editor se quedaba en "Cargando…" en algunos navegadores esperando `use(params)`; ahora lee el id con `useParams()`
+    (abre en ~0.6 s).
+  - Publicar flujos con n8n corriendo no siempre se aplica: `n8n/publish-workflows.ps1` los publica uno por uno con n8n
+    detenido.
+- Scripts: `scripts/start-all.ps1` (todo en ventanas separadas) y `scripts/test-all.ps1` (todas las pruebas).

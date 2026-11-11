@@ -8,6 +8,8 @@ using InteriorDesign.Infrastructure.Seed;
 using InteriorDesign.Infrastructure.Validation;
 using InteriorDesign.PrologBridge;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.StaticFiles;
+using Microsoft.Extensions.FileProviders;
 
 DotEnv.Load(AppContext.BaseDirectory);
 DotEnv.Load(Directory.GetCurrentDirectory());
@@ -32,6 +34,23 @@ builder.Services.AddSingleton(sp =>
     var runner = swipl is not null && root is not null ? new PrologRunner(swipl, root) : null;
     return new PrologVerifier(runner, sp.GetRequiredService<ILogger<PrologVerifier>>());
 });
+
+// IA: n8n orquesta los trabajos, el servicio de IA en Python (ai-service) hace la IA y la API valida con el motor
+var repoRoot = Directory.GetParent(schemasDir)!.FullName;
+var storageSetting = builder.Configuration["STORAGE_PATH"] ?? "./storage";
+var storageDir = Path.GetFullPath(Path.IsPathRooted(storageSetting) ? storageSetting : Path.Combine(repoRoot, storageSetting));
+Directory.CreateDirectory(storageDir);
+var aiOptions = new AiOptions(
+    N8nUrl: builder.Configuration["N8N_URL"] ?? "http://localhost:5678",
+    CallbackBaseUrl: builder.Configuration["API_URL"] ?? "http://localhost:5000",
+    CallbackSecret: builder.Configuration["N8N_CALLBACK_SECRET"],
+    StorageDir: storageDir,
+    DispatchEnabled: builder.Configuration.GetValue("AiDispatchEnabled", true),
+    AiServiceUrl: builder.Configuration["AI_SERVICE_URL"] ?? "http://127.0.0.1:8100");
+builder.Services.AddSingleton(aiOptions);
+builder.Services.AddScoped<ExportService>();
+builder.Services.AddScoped<AiJobService>();
+builder.Services.AddHttpClient();
 
 builder.Services.ConfigureHttpJsonOptions(o =>
 {
@@ -64,6 +83,11 @@ using (var scope = app.Services.CreateScope())
 
 app.UseExceptionHandler();
 app.UseCors();
+// Imagenes generadas y referencias subidas (storage/ esta fuera de git)
+// .blend no es un tipo conocido: se agrega para poder descargar el archivo de Blender
+var contentTypes = new FileExtensionContentTypeProvider();
+contentTypes.Mappings[".blend"] = "application/octet-stream";
+app.UseStaticFiles(new StaticFileOptions { FileProvider = new PhysicalFileProvider(storageDir), RequestPath = "/files", ContentTypeProvider = contentTypes });
 app.MapOpenApi();
 app.UseSwaggerUI(o =>
 {
@@ -76,6 +100,8 @@ app.MapGet("/api/health", (PrologVerifier prolog) => new { status = "ok", prolog
 app.MapCatalog();
 app.MapProjects();
 app.MapDesigns();
+app.MapAi();
+app.MapExports();
 
 app.Run();
 

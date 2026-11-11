@@ -2,11 +2,14 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { useProgress } from "@react-three/drei";
 import { api, ApiError, API_URL } from "@/lib/api";
 import { describe } from "@/lib/reasons";
 import type { BudgetInfo, CatalogMaterial, DesignState, HistoryEntry, Move, MoveBatchResult, Product, Proposal, Reason, Requirement, Saving, ValidationReport } from "@/lib/types";
 import { fmtM, fmtMoney, fmtRange, label, rotateKeepingCenter } from "@/lib/units";
 import { AddFurniture } from "./AddFurniture";
+import { AiPanel } from "./AiPanel";
+import { ExportPanel } from "./ExportPanel";
 import { BudgetPanel } from "./BudgetPanel";
 import { DecisionBox, type Decision } from "./DecisionBox";
 import { HistoryPanel } from "./HistoryPanel";
@@ -15,7 +18,8 @@ import { VersionTabs } from "./VersionTabs";
 import { ConfigPanel } from "./ConfigPanel";
 import { Finishes } from "./Finishes";
 import { floorKindOf } from "./scene/materials";
-import { RoomScene, type ViewMode } from "./scene/RoomScene";
+import { RoomScene, type SceneCapture, type Shot, type ViewMode } from "./scene/RoomScene";
+import { RealisticViews } from "./RealisticViews";
 import styles from "./Editor.module.css";
 
 type Message = { kind: "ok" | "error" | "info"; text: string; reasons?: Reason[] };
@@ -42,12 +46,43 @@ export function Editor({ designId }: { designId: string }) {
   const [message, setMessage] = useState<Message | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [view, setView] = useState<ViewMode>("3d");
-  const [sideTab, setSideTab] = useState<"diseno" | "presupuesto" | "requisitos" | "historial">("diseno");
+  const [sideTab, setSideTab] = useState<"diseno" | "ia" | "presupuesto" | "requisitos" | "historial" | "exportar">("diseno");
   const [requirements, setRequirements] = useState<Requirement[]>([]);
   const [budget, setBudget] = useState<BudgetInfo | null>(null);
   /** Sube cuando cambia la habitacion (requisitos/acabados), que no cambia la revision del diseno. */
   const [roomVersion, setRoomVersion] = useState(0);
   const checkSeq = useRef(0);
+  const captureRef = useRef<SceneCapture | null>(null);
+  const onCaptureReady = useCallback((capture: SceneCapture) => {
+    captureRef.current = capture;
+  }, []);
+  /** Quita la seleccion y espera a que se redibuje, para que la captura no lleve marcas ni zonas. */
+  /**
+   * Quita la seleccion, espera a que terminen de cargar los modelos 3D (mientras cargan se dibuja una caja: la IA la
+   * copiaria) y a que se redibuje, para que la captura no lleve marcas, zonas ni cajas provisionales.
+   */
+  const clearForCapture = useCallback(async () => {
+    setSelectedId(null);
+    const until = performance.now() + 20000;
+    while (useProgress.getState().active && performance.now() < until) await new Promise((r) => setTimeout(r, 200));
+    // Dos cuadros para que se redibuje sin seleccion; si la pestana esta en segundo plano no hay cuadros: maximo 150 ms
+    await Promise.race([
+      new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))),
+      new Promise((r) => setTimeout(r, 150)),
+    ]);
+  }, []);
+  const captureView = useCallback(async (): Promise<Shot | null> => {
+    await clearForCapture();
+    return captureRef.current ? captureRef.current.current() : null;
+  }, [clearForCapture]);
+  const captureCorners = useCallback(async (): Promise<Shot[]> => {
+    await clearForCapture();
+    return captureRef.current ? captureRef.current.corners() : [];
+  }, [clearForCapture]);
+  const exportGlb = useCallback(async (): Promise<Blob | null> => {
+    await clearForCapture();
+    return captureRef.current ? captureRef.current.exportGlb() : null;
+  }, [clearForCapture]);
 
   const reload = useCallback(async () => {
     const [s, r] = await Promise.all([api.design(designId), api.validation(designId)]);
@@ -374,14 +409,23 @@ export function Editor({ designId }: { designId: string }) {
           onBlocked={(id) => setMessage({ kind: "info", text: `${id} esta bloqueado. Desbloquealo para moverlo.` })}
           onDrag={(id, x, y) => updateDraft(id, { x, y })}
           onRotate={rotateTo}
+          onCaptureReady={onCaptureReady}
         />
         <div className={styles.viewToggle} role="group" aria-label="Vista">
-          {(["3d", "planta"] as const).map((v) => (
+          {(["3d", "foto", "planta"] as const).map((v) => (
             <button key={v} type="button" className={view === v ? styles.viewOn : undefined} onClick={() => setView(v)}>
-              {v === "3d" ? "3D" : "Planta"}
+              {v === "3d" ? "3D" : v === "foto" ? "Foto" : "Planta"}
             </button>
           ))}
         </div>
+        <RealisticViews
+          key={designId}
+          designId={designId}
+          objectCount={state.objects.length}
+          busy={busy || hasDraft}
+          capture={captureCorners}
+          onError={(text) => setMessage({ kind: "error", text })}
+        />
         <div className={styles.legend}>
           <span className={styles.swDoor} /> zona de puerta <span className={styles.swWindow} /> acceso a ventana
           <span className={styles.swPending} /> sin guardar <span className={styles.swConflict} /> interfiere
@@ -452,9 +496,11 @@ export function Editor({ designId }: { designId: string }) {
           {(
             [
               ["diseno", "Diseno"],
+              ["ia", "IA"],
               ["presupuesto", "Presupuesto"],
               ["requisitos", "Requisitos"],
               ["historial", "Historial"],
+              ["exportar", "Exportar"],
             ] as const
           ).map(([key, text]) => (
             <button key={key} type="button" role="tab" aria-selected={sideTab === key} className={sideTab === key ? styles.sideTabOn : undefined} onClick={() => setSideTab(key)}>
@@ -481,6 +527,32 @@ export function Editor({ designId }: { designId: string }) {
             products={products}
             busy={busy}
             onSave={(next) => void saveRequirements(next)}
+          />
+        )}
+        {sideTab === "ia" && (
+          <AiPanel
+            key={designId}
+            designId={designId}
+            objectCount={state.objects.length}
+            style={state.design.style}
+            view={view}
+            onView={setView}
+            capture={captureView}
+            busy={busy || hasDraft}
+            onApplied={(applied) => {
+              void reload();
+              setMessage({ kind: applied > 0 ? "ok" : "info", text: applied > 0 ? `IA: ${applied} cambios aplicados` : "El motor no acepto ninguna propuesta" });
+            }}
+            onError={(text) => setMessage({ kind: "error", text })}
+          />
+        )}
+        {sideTab === "exportar" && (
+          <ExportPanel
+            key={designId}
+            designId={designId}
+            revision={state.design.revision + roomVersion * 100000}
+            exportGlb={exportGlb}
+            onError={(text) => setMessage({ kind: "error", text })}
           />
         )}
         {sideTab === "historial" && <HistoryPanel designId={designId} revision={state.design.revision} busy={busy || hasDraft} onRevert={(e) => void revertTo(e)} />}

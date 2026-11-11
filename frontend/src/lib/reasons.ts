@@ -29,6 +29,10 @@ export function describe(r: Reason): string {
     case "instancia_repetida": return "Ya existe un objeto con ese id";
     case "estructural_protegido": return `${a} es estructural: necesita confirmacion explicita`;
     case "accion_invalida": return "Accion invalida";
+    case "accion_desconocida": return "La IA propuso una accion que no existe";
+    case "objeto_inexistente": return "El mueble no existe en este diseno";
+    case "propuesta_incompleta": return "A la propuesta le faltan datos";
+    case "sin_cambio": return "No cambia nada (ya estaba asi)";
     default: return r.term;
   }
 }

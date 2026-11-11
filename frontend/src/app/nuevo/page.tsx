@@ -1,5 +1,5 @@
-import { NewProject } from "@/components/NewProject";
+import { NewProjectPage } from "./NewProjectPage";
 
 export default function Page() {
-  return <NewProject />;
+  return <NewProjectPage />;
 }

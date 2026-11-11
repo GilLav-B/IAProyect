@@ -23,6 +23,7 @@ public sealed class PostgresFactAttribute : FactAttribute
 
 public sealed class ApiFixture : IDisposable
 {
+    public const string CallbackSecret = "secreto_de_prueba";
     public WebApplicationFactory<Program>? Factory { get; }
     public HttpClient? Client { get; }
 
@@ -41,6 +42,11 @@ public sealed class ApiFixture : IDisposable
         {
             b.UseSetting("ConnectionStrings:Default", connection);
             b.UseSetting("SeedExamples", "true");
+            // IA: no se manda nada a n8n; las pruebas simulan sus llamadas de regreso
+            b.UseSetting("AiDispatchEnabled", "false");
+            b.UseSetting("N8N_CALLBACK_SECRET", ApiFixture.CallbackSecret);
+            // Sin servicio de IA (Python) en las pruebas: puerto que no escucha
+            b.UseSetting("AI_SERVICE_URL", "http://127.0.0.1:9");
         });
         Client = Factory.CreateClient();
     }
@@ -52,8 +58,13 @@ public sealed class ApiFixture : IDisposable
     }
 }
 
+/// <summary>Todas las pruebas de la API comparten una sola BD de prueba (no corren en paralelo entre si).</summary>
+[CollectionDefinition("api")]
+public class ApiCollection : ICollectionFixture<ApiFixture>;
+
 /// <summary>Fase 2: la API completa contra PostgreSQL, con los datos de ejemplo d1-d4.</summary>
-public class ApiTests(ApiFixture fx) : IClassFixture<ApiFixture>
+[Collection("api")]
+public class ApiTests(ApiFixture fx)
 {
     private HttpClient Http => fx.Client!;
 

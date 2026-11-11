@@ -2,108 +2,185 @@
 
 Proyecto del **Equipo 1** - Instituto Tecnologico de Tijuana (Tijuana, Baja California, Mexico).
 
-Este repositorio contiene la **base de conocimiento en Prolog** (`diseno.pl`) que modela las relaciones, reglas y validaciones del sistema que usara la IA.
+Plataforma web para disenar, planificar, visualizar y presupuestar espacios interiores reales con IA, un editor 3D,
+catalogos de productos, renders en Blender y automatizacion con n8n. Las reglas de negocio estan en la base de
+conocimiento en Prolog `diseno.pl`, que el motor de validacion reproduce y con la que se compara en las pruebas.
 
 ## Descripcion
 
-Plataforma web para disenar, planificar, visualizar y configurar espacios interiores usando IA, modelado 3D, catalogos de productos y automatizacion con n8n.
-
-La IA no entrega solo una imagen: el diseno es un **modelo estructurado, editable y persistente** (`DesignState`) conectado con productos, presupuesto y versiones.
-
-Flujo general:
+La IA no entrega solo una imagen: el diseno es un **modelo estructurado, editable y persistente** (`DesignState`) conectado
+con productos, presupuesto y versiones.
 
 ```
 Espacio real -> analisis con IA -> requisitos -> propuestas -> modelo 3D
 -> productos -> presupuesto -> modificaciones -> versiones -> exportacion
 ```
 
+Principio clave: **IA propone -> el motor valida -> el sistema acepta o rechaza -> el frontend aplica.** La IA no es la
+fuente de verdad.
+
 ## Alcance
 
-**Espacios:** sala, recamara, cocina, oficina, comedor.
+**Espacios:** sala, recamara, cocina, oficina, comedor (solo interiores).
 
 **Estilos:** moderno, minimalista, industrial, Japandi, clasico.
 
-**Entradas del usuario:** fotografias, dimensiones, planos, presupuesto, estilo, colores, muebles existentes, restricciones.
+**Entradas del usuario:** fotografias (diseno de referencia), dimensiones, presupuesto, estilo, colores, muebles
+existentes, restricciones y requisitos con prioridad.
 
-**Salidas:** propuesta de diseno, imagenes/render, distribucion, muebles recomendados, materiales, presupuesto, lista de compras, plano 2D, archivo Blender, reporte PDF.
+**Salidas:** propuesta de diseno, distribucion 3D editable, render exacto en Blender (`.blend` + PNG), imagenes
+hiperrealistas con IA, muebles recomendados, materiales, presupuesto por rubro, lista de compras, lista de materiales,
+plano 2D (SVG/PDF), reporte PDF, Excel/CSV y modelo 3D (GLB).
 
-**Tipos de proyecto propuestos:**
-- Comercial (oficina)
-- Domestica (casera)
+**Tipos de proyecto:** comercial (oficina) y domestico.
 
-## Arquitectura conceptual
+## Que hace la plataforma
 
-| Componente | Funcion |
+| Funcion | Donde |
 |---|---|
-| Frontend | Editor, UI y visor 3D (React/Next.js, Three.js, WebGL) |
-| Backend | API, motor de diseno, validacion y versiones (Node.js o .NET) |
-| n8n | Orquestacion de flujos con IA e integraciones |
-| IA | Analisis de fotos/planos y propuestas de diseno |
-| Catalogos | Productos de proveedores normalizados con adaptadores |
-| Blender | Generacion y exportacion 3D (GLB/GLTF, .blend) |
-| PostgreSQL + Object Storage | Datos, fotos, planos, modelos y renders |
+| Crear proyecto, cuarto (medidas, puertas, ventanas, acabados) y requisitos desde cero | Inicio -> "Nuevo" |
+| Editor 3D: mover (clic izq.), girar libre (clic der.), bloquear, cambiar modelo/color/material | Pestana Diseno |
+| Vistas 3D, Foto (altura de los ojos) y Planta | Botones arriba del visor |
+| Versiones tipo hojas de Excel, duplicar, comparar, historial y revertir | Barra de versiones / Historial |
+| Presupuesto por rubro con rangos, modos minimizar/ajustar/flexible y ahorros sugeridos | Pestana Presupuesto |
+| Requisitos con prioridad y decision cuando dos requisitos chocan | Pestana Requisitos |
+| **Disenar con IA**: la IA arma un diseno propio del estilo elegido (version nueva) | Pestana IA |
+| **Copiar un diseno de internet**: subir una foto y la IA lo copia en tu cuarto | Pestana IA |
+| **Chat**: "hazlo mas minimalista", "cambia el sofa por uno mas chico" (aplicas solo lo valido) | Pestana IA |
+| **Render realista con IA** de la vista actual y **4 vistas realistas** (burbujas arriba a la derecha) | Pestana IA / visor |
+| **Render exacto en Blender** (Cycles) y archivo `.blend` | Pestana IA |
+| Listas de compras y materiales (10% de desperdicio), PDF, Excel, CSV, plano 2D, GLB, `.blend` | Pestana Exportar |
 
-Principio clave: **IA propone -> el motor valida -> el sistema acepta o rechaza -> el frontend aplica.** La IA no es la fuente de verdad.
+Todo lo que propone la IA pasa por el motor de validacion: lo que no cabe, choca, tapa puertas o ventanas, rebasa el
+presupuesto o rompe un requisito obligatorio se rechaza y se le explica al usuario.
 
-## Rol de Prolog en el proyecto
+## Arquitectura
 
-`diseno.pl` representa en Prolog:
+```
+                 +-------------------+        +---------------------------+
+  Navegador ---> |  Frontend         | -----> |  API .NET (puerto 5000)   | ---> PostgreSQL
+                 |  Next.js + Three  |  REST  |  datos, motor de reglas,  |
+                 |  (puerto 3000)    |  + SSE |  versiones, presupuesto   |
+                 +-------------------+        +---------------------------+
+                                                 |  crea trabajo  ^  resultado (validado por el motor)
+                                                 v                |
+                                          +----------------+      |
+                                          |  n8n (5678)    | -----+   solo orquesta
+                                          +----------------+
+                                                 |
+                                                 v
+                                     +-------------------------------+
+                                     |  Servicio de IA en Python     |
+                                     |  (FastAPI, puerto 8100)       | ---> OpenAI (texto e imagenes)
+                                     |  prompts (/ai-rules), render, | ---> Blender (build_scene.py)
+                                     |  Blender, PDF/Excel/plano     |
+                                     +-------------------------------+
+```
 
-- Espacios, estilos, entradas y salidas.
-- Elementos estructurales (protegidos) vs modificables.
-- Prioridades de requisitos: obligatorio, importante, preferencia, opcional.
-- Catalogo de productos, proveedores y materiales.
-- Habitaciones con puertas y ventanas, y objetos colocados con posicion y rotacion.
-- Disenos como versiones (padre/hijo), bloqueo de elementos y comparacion.
-- Presupuesto dinamico por rubro con rangos minimo-maximo.
-- **Conflictos** (impiden aceptar un diseno) y **advertencias**.
-- Validacion de propuestas de la IA (`veredicto/3`).
-- Busqueda de productos similares y reemplazo.
-- Lista de compras y de materiales (con factor de desperdicio).
-- Explicacion de decisiones e interpretacion de instrucciones en texto.
-- Reglas de las IA, principios del proyecto, flujos de n8n y tareas en tiempo real vs asincronas.
+| Componente | Tecnologia | Funcion |
+|---|---|---|
+| Frontend | Next.js 16, React 19, Three.js + React Three Fiber, postprocesado (SSAO) | Editor y visor 3D, paneles |
+| API y motor | .NET 10 (ASP.NET Core), EF Core + PostgreSQL 17 | Datos, motor de validacion (= `diseno.pl`), versiones, presupuesto, listas |
+| Servicio de IA | **Python** 3.14 + FastAPI | **Todo el procesamiento de IA**: prompts con `/ai-rules`, OpenAI, imagenes, Blender, exportaciones |
+| Orquestador | n8n 2.x | Recibe trabajos de la API, llama al servicio de IA y regresa el resultado (no hace tiempo real) |
+| 3D exacto | Blender 4.3 (Cycles) | `blender/build_scene.py`: DesignState -> `.blend` + render |
+| Verificador | SWI-Prolog | Las pruebas comparan el motor contra `diseno.pl` |
+
+Decisiones y su porque: [`docs/decisiones.md`](docs/decisiones.md).
 
 ## Estructura del repositorio
 
 ```
 .
-|-- README.md
-`-- diseno.pl     # base de conocimiento completa
+|-- diseno.pl                 base de conocimiento (especificacion de las reglas)
+|-- ai-rules/                 reglas para la IA (global, seguridad, disenador, imagenes, Blender...)
+|-- ai-service/               servicio de IA en Python (FastAPI) + pruebas (pytest)
+|-- backend/                  API .NET, motor de validacion, BD (EF Core), puente a Prolog + pruebas (xUnit)
+|-- blender/                  build_scene.py (DesignState -> Blender) y render_design.ps1
+|-- frontend/                 Next.js: editor 3D, paneles, assets CC0 (public/assets)
+|-- n8n/                      flujos exportados (workflows/*.json), generador y scripts de arranque/publicacion
+|-- schemas/                  JSON Schema de DesignState, habitacion y catalogo + ejemplos d1-d4
+|-- scripts/                  start-all.ps1 (arrancar todo) y test-all.ps1 (todas las pruebas)
+|-- prolog/                   puente para consultar diseno.pl desde .NET
+|-- docs/                     decisiones, esquema SQL, capturas, PDF del proyecto
+`-- storage/                  (fuera de git) fotos subidas, renders, archivos de Blender
 ```
 
-## Requisitos
+## Requisitos (Windows)
 
-- [SWI-Prolog](https://www.swi-prolog.org/) (probado en 9.0.4).
+| Programa | Version probada | Para que |
+|---|---|---|
+| .NET SDK | 10 | API y motor |
+| Node.js | 26 | Frontend y n8n |
+| Python | 3.14 | Servicio de IA |
+| PostgreSQL | 17 | Base de datos (servicio de Windows) |
+| n8n | 2.46 (`npm install -g n8n`) | Orquestador |
+| Blender | 4.3 | Render exacto y `.blend` (opcional) |
+| SWI-Prolog | 10.0 | Comparar el motor con `diseno.pl` en las pruebas (opcional) |
+| Cuenta de OpenAI | - | API key para la IA (texto e imagenes) |
+
+## Instalacion (una sola vez)
+
+1. Copia `.env.example` como `.env` y llena:
+   - `POSTGRES_*` (tu PostgreSQL local).
+   - `OPENAI_API_KEY` (tu key; solo vive en `.env`, que esta en `.gitignore`).
+   - `N8N_CALLBACK_SECRET` (cualquier texto largo y aleatorio).
+   - Opcionales: `BLENDER_PATH`, `SWIPL_PATH`, `OPENAI_IMAGE_QUALITY` (`low`/`medium`/`high`).
+   > El `.env` tiene prioridad: si en Windows tienes otra variable `OPENAI_API_KEY`, se usa la del `.env`.
+2. Frontend:
+   ```powershell
+   npm --prefix frontend install
+   npm --prefix frontend run assets     # baja modelos y texturas CC0 de Poly Haven
+   ```
+3. Servicio de IA (Python):
+   ```powershell
+   python -m venv ai-service\.venv
+   ai-service\.venv\Scripts\python.exe -m pip install -r ai-service\requirements.txt
+   ```
+4. n8n: arrancalo una vez (`powershell -ExecutionPolicy Bypass -File n8n\start-n8n.ps1`), crea tu cuenta en
+   http://localhost:5678, detenlo (Ctrl+C) y publica los flujos:
+   ```powershell
+   powershell -ExecutionPolicy Bypass -File n8n\publish-workflows.ps1
+   ```
+5. La base de datos se crea sola: la API aplica las migraciones y carga los ejemplos `d1`-`d4` al arrancar.
 
 ## Como ejecutar
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\start-all.ps1          # desarrollo
+powershell -ExecutionPolicy Bypass -File scripts\start-all.ps1 -Prod    # web compilada (mas rapida)
+```
+
+Abre http://localhost:3000. Otros: API/Swagger http://localhost:5000/swagger, servicio de IA
+http://127.0.0.1:8100/health, n8n http://localhost:5678.
+
+Render de Blender por comando (sin la pagina): `powershell -ExecutionPolicy Bypass -File blender\render_design.ps1 -DesignId d1 -Views all`.
+
+## Pruebas
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\test-all.ps1
+```
+
+Corre (con la API detenida): pruebas del motor y de la API en .NET (incluye la comparacion contra `diseno.pl` si hay
+SWI-Prolog y una BD de prueba `iaproyect_test` si hay PostgreSQL), pruebas del servicio de IA en Python (OpenAI y Blender
+simulados, no gasta credito) y tipos, lint y compilacion del frontend.
+
+## Rol de Prolog en el proyecto
+
+`diseno.pl` representa en Prolog: espacios, estilos, entradas y salidas; elementos estructurales (protegidos) vs
+modificables; prioridades de requisitos; catalogo, proveedores y materiales; habitaciones con puertas y ventanas;
+objetos con posicion y rotacion; disenos como versiones; presupuesto por rubro con rangos; **conflictos** y
+**advertencias**; validacion de propuestas de la IA (`veredicto/3`); similares y reemplazos; lista de compras y de
+materiales (con factor de desperdicio); explicacion de decisiones; reglas de las IA y flujos de n8n.
 
 ```prolog
 ?- consult('diseno.pl').
 ?- pruebas.
-```
-
-Despues de editar el archivo, recarga con:
-
-```prolog
-?- make.
-```
-
-## Ejemplos de consultas
-
-```prolog
-?- diseno_valido(d1).
 ?- conflictos(d2, L).
-?- advertencias(d1, L).
-?- presupuesto_total(d1, Min, Max).
 ?- veredicto(d1, reemplazar(sofa_d1, sofa_001), V).
-?- buscar_similares(sofa_001, L).
-?- sustitucion_ahorro(d2, sofa_d2, Nuevo, Ahorro).
-?- comparar_versiones(d1, d2, Difs).
-?- lista_compras(d1, Items).
-?- interpretar([cambia, el, sofa, por, uno, mas, pequeno], Acciones).
+?- lista_materiales(d1, Items).
 ```
-
-## Predicados principales
 
 | Predicado | Que hace |
 |---|---|
@@ -112,8 +189,7 @@ Despues de editar el archivo, recarga con:
 | `diseno/3`, `objeto/3`, `coloca/5`, `config/4` | Version de diseno, objetos y su posicion/configuracion |
 | `requisito/3` | Requisitos del usuario por habitacion y prioridad |
 | `presupuesto_total/3`, `presupuesto_rubro/4` | Presupuesto dinamico (rangos) |
-| `conflicto/2`, `diseno_valido/1` | Conflictos que invalidan un diseno |
-| `advertencia/2` | Avisos que no bloquean |
+| `conflicto/2`, `diseno_valido/1`, `advertencia/2` | Conflictos que invalidan un diseno y avisos que no bloquean |
 | `validar_propuesta/3`, `veredicto/3` | Validacion de acciones propuestas por la IA |
 | `similar/2`, `buscar_similares/2`, `alternativas/3` | Productos similares y reemplazos |
 | `comparar_versiones/3` | Diferencias entre disenos |
@@ -123,42 +199,40 @@ Despues de editar el archivo, recarga con:
 ## Convenciones
 
 - Medidas en **cm**, precios en **pesos MXN**.
-- Coordenadas: esquina (0,0) = suroeste; `x` a lo largo, `y` a lo ancho. Paredes: sur, norte, oeste, este.
-- Archivo sin acentos para evitar problemas de codificacion.
-- Marcadores en comentarios: `[DOC]` viene del documento del proyecto, `[EJEMPLO]` dato inventado para pruebas, `[SUPUESTO]` decision a confirmar.
-
-## Estado actual
-
-- Base de conocimiento cargada y probada con `?- pruebas.` en SWI-Prolog 9.0.4.
-- Solo `sofa_001`, la habitacion de 5.20 x 3.80 x 2.70 m y el presupuesto de $30,000 provienen del documento. El resto del catalogo, precios y proveedores son datos de ejemplo.
+- Coordenadas: esquina (0,0) = suroeste; `x` a lo largo (este), `y` a lo ancho (norte). Paredes: sur, norte, oeste, este.
+- Rotacion en grados 0-359, antihoraria; 0 = el frente mira al sur.
+- Cada objeto tiene un `instanceId` unico que es el mismo en el DesignState, en Three.js, en el GLB y en Blender.
+- Marcadores: `[DOC]` viene del documento, `[EJEMPLO]` dato inventado para pruebas, `[SUPUESTO]` decision a confirmar.
 
 ## Avance del prototipo (capturas)
 
-Asi se ve hoy la plataforma web (backend .NET + frontend Next.js con React Three Fiber). Cada cambio que se hace en el
-editor 3D pasa por el motor de validacion, que da los mismos resultados que `diseno.pl`.
-
-**Editor 3D** - sala de `d3`: muebles con medidas reales, sombras y luz natural; a la derecha, la lista de objetos y la
-validacion del motor (advertencias de presupuesto y requisitos).
+**Editor 3D** - muebles con medidas reales, sombras y luz natural; a la derecha, objetos y validacion del motor.
 
 ![Editor 3D en perspectiva](docs/img/editor-3d.png)
 
-**Vista de planta** - mismo diseno visto desde arriba, con el sofa seleccionado y su panel de configuracion (modelo, color,
-material, precio, medidas, posicion y rotacion). Se ven las zonas de la puerta (naranja) y del acceso a la ventana (azul).
+**Vista de planta** - sofa seleccionado con su panel de configuracion; zonas de la puerta (naranja) y de la ventana (azul).
 
 ![Editor en vista de planta](docs/img/editor-planta.webp)
 
-**Inicio** - proyectos y sus versiones de diseno, con estilo, modo de presupuesto, rango de precio y si son validas.
+**Inicio** - proyectos y sus versiones, con estilo, modo de presupuesto, rango de precio y si son validas.
 
 ![Pagina de inicio con proyectos y versiones](docs/img/inicio-proyectos.png)
 
-> En la captura de planta aparece el aviso "No se pudo conectar con la API": en ese momento el backend se estaba
-> reiniciando. Con la API corriendo (`dotnet run --project backend/src/InteriorDesign.Api`) el aviso no aparece.
+## Pendientes conocidos
 
-## Pendientes
-
-- Definir "Geometria y caracteristicas del inmueble" del proyecto comercial (hay una propuesta en `caracteristica_inmueble/2`).
-- Reemplazar los datos `[EJEMPLO]` por catalogo y proveedores reales.
-- Confirmar con el equipo los parametros `[SUPUESTO]` (desperdicio, ocupacion maxima, acceso a ventanas, margen flexible).
+- **Datos reales:** el catalogo, los precios y los proveedores son `[EJEMPLO]`; falta conectar proveedores reales con
+  adaptadores.
+- **Parametros `[SUPUESTO]`** por confirmar con el equipo: ocupacion maxima (60%), acceso a ventanas (40 cm), margen
+  flexible (10%), alto de puerta (2.10 m). El desperdicio de materiales (10%) ya lo confirmo el usuario.
+- **Inmueble comercial:** falta definir su geometria y caracteristicas (propuesta en `caracteristica_inmueble/2`).
+- **Mas modelos 3D:** 18 de 50 productos tienen modelo GLB; el resto se arma por piezas. Falta una ronda de modelos y
+  decoracion (cojines, jarrones, libros, plafones) para que el 3D y Blender luzcan como un render profesional.
+- **Doble altura, escaleras y cambios de estructura sugeridos por la IA** (con confirmacion del usuario): no implementado.
+- **Blender en CPU:** sin tarjeta NVIDIA cada vista de calidad alta tarda ~3-4 min.
+- **Imagenes con IA:** son ayuda visual con su leyenda; a veces cambian detalles chicos (no son exactas).
+- **n8n:** publicar flujos con n8n corriendo no siempre se aplica; usar `n8n/publish-workflows.ps1` con n8n detenido.
+- **Seguridad para produccion:** el servicio de IA solo escucha en 127.0.0.1 y la API no tiene usuarios ni login; antes de
+  publicarlo en internet hace falta autenticacion, HTTPS y object storage real (hoy `storage/` local).
 
 ## Principios del proyecto
 

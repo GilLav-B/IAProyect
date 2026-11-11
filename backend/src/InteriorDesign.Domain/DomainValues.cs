@@ -46,6 +46,11 @@ public static class DomainValues
 
     public static readonly string[] Surfaces = ["piso", "muros", "techo"];
 
+    public static readonly string[] JobTypes = ["referencia", "chat", "imagen", "diseno", "blender"];
+
+    /// <summary>estado_trabajo/1 en diseno.pl</summary>
+    public static readonly string[] JobStatuses = ["pendiente", "en_proceso", "completado", "fallido"];
+
     /// <summary>Rotacion en grados enteros, 0 a 359 (antihoraria vista desde arriba).</summary>
     public const int MaxRotation = 359;
 

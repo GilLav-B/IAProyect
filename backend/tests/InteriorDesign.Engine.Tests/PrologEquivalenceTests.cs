@@ -151,6 +151,9 @@ public class PrologEquivalenceTests(ITestOutputHelper output)
             queries[$"t_{d}"] = $"presupuesto_total({d},Mi,Ma), R = Mi/Ma";
             expected[$"t_{d}"] = $"{Term.N(t.Min)}/{Term.N(t.Max)}";
             queries[$"v_{d}"] = $"(diseno_valido({d}) -> R = si ; R = no)"; expected[$"v_{d}"] = Engine.IsValid(s) ? "si" : "no";
+            // Fase 7: listas de compras y de materiales (seccion 19)
+            queries[$"lc_{d}"] = $"lista_compras({d},R)"; expected[$"lc_{d}"] = Str(Engine.ShoppingList(s).Select(i => i.ToTerm()));
+            queries[$"lm_{d}"] = $"lista_materiales({d},R)"; expected[$"lm_{d}"] = Str(Engine.MaterialList(s).Select(i => i.ToTerm()));
             queries[$"s_{d}"] = $"findall(I-N-A, sustitucion_ahorro({d},I,N,A), R)";
             expected[$"s_{d}"] = "[" + string.Join(",", Engine.Savings(s).Select(x =>
                 $"{Term.A(x.InstanceId)}-{Term.A(x.Product.Id)}-{Term.N(x.Saving)}")) + "]";
