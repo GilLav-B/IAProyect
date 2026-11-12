@@ -44,7 +44,7 @@
 
 .dropOn {
   border-color: var(--accent);
-  background: #e7f5ff;
+  background: var(--accent-soft);
 }
 
 .thumb {
@@ -97,7 +97,7 @@
 
 .error {
   font-size: 13px;
-  color: #c92a2a;
+  color: var(--bad);
   margin: 0;
 }
 
@@ -132,7 +132,7 @@
 
 .rejected {
   font-size: 12px;
-  color: #c92a2a;
+  color: var(--bad);
 }
 
 .render {
@@ -186,4 +186,15 @@
 .download:disabled {
   opacity: 0.6;
   cursor: wait;
+}
+
+.download strong {
+  display: block;
+  font-weight: 650;
+}
+
+.downloadHint {
+  display: block;
+  font-size: 12px;
+  color: var(--muted);
 }

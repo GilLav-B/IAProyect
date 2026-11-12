@@ -13,10 +13,11 @@
   font-size: 12px;
   padding: 6px 10px;
   border-radius: 999px;
-  border: 0;
-  background: rgba(255, 255, 255, 0.92);
-  color: #343a40;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--text);
+  font-weight: 600;
+  box-shadow: var(--shadow-float);
   cursor: pointer;
 }
 
@@ -66,14 +67,14 @@
   place-items: center;
   font-size: 12px;
   font-weight: 600;
-  color: #495057;
+  color: var(--text);
 }
 
 .spinner {
   position: absolute;
   inset: 6px;
   border-radius: 50%;
-  border: 3px solid rgba(28, 126, 214, 0.2);
+  border: 3px solid var(--accent-soft);
   border-top-color: var(--accent);
   animation: spin 1s linear infinite;
 }

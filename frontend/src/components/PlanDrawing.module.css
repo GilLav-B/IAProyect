@@ -1,0 +1,131 @@
+.plan {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.floor {
+  fill: #fbfcfa;
+}
+
+.walls {
+  fill: none;
+  stroke: var(--text);
+}
+
+.gap {
+  stroke: #fbfcfa;
+}
+
+.door {
+  stroke: var(--text);
+  stroke-width: 3;
+}
+
+.swing {
+  fill: none;
+  stroke: var(--muted);
+  stroke-width: 1.5;
+  stroke-dasharray: 5 4;
+}
+
+.window {
+  stroke: var(--plan);
+  stroke-dasharray: 2 3;
+  opacity: 0.8;
+}
+
+.piece {
+  fill: var(--accent-soft);
+  stroke: var(--plan);
+  stroke-width: 2;
+}
+
+.thin {
+  fill: var(--plan);
+  stroke: var(--plan);
+  stroke-width: 2;
+}
+
+.plant {
+  fill: var(--ok-soft);
+  stroke: var(--ok);
+  stroke-width: 2;
+}
+
+.rug {
+  fill: none;
+  stroke: var(--plan);
+  stroke-width: 1.5;
+  stroke-dasharray: 6 5;
+  opacity: 0.7;
+}
+
+.front {
+  stroke: var(--plan);
+  stroke-width: 5;
+  stroke-linecap: round;
+}
+
+.dims line {
+  stroke: var(--muted);
+  stroke-width: 1.5;
+}
+
+.dims text {
+  fill: var(--muted);
+  font-size: 22px;
+  font-stretch: 125%;
+  font-weight: 600;
+}
+
+/* Plano grande: se traza una sola vez al abrir la pagina (unico movimiento automatico del sitio) */
+.hero .walls {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: draw 1.1s cubic-bezier(0.6, 0, 0.3, 1) 0.1s forwards;
+}
+
+.hero .object {
+  opacity: 0;
+  animation: settle 0.5s ease-out forwards;
+}
+
+.hero .dims {
+  opacity: 0;
+  animation: settle 0.6s ease-out 1.3s forwards;
+}
+
+@keyframes draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes settle {
+  to {
+    opacity: 1;
+  }
+}
+
+.thumb .walls {
+  stroke-width: 16px;
+}
+
+/* En miniatura las lineas se engruesan para que los muebles se lean a ese tamano */
+.thumb .piece,
+.thumb .plant {
+  stroke-width: 4;
+}
+
+.thumb .rug {
+  stroke-width: 3;
+}
+
+.thumb .front {
+  stroke-width: 9;
+}
+
+.thumb .door {
+  stroke-width: 5;
+}

@@ -28,7 +28,26 @@ type Draft = Record<string, { x: number; y: number; rotation: number }>;
 
 const CHECK_DELAY_MS = 150;
 
+/** Iconos de linea de las pestanas (24x24, trazo 1.6). */
+const TAB_ICONS: Record<string, string> = {
+  diseno: "M4 20h16M6 20V9l6-5 6 5v11M10 20v-6h4v6",
+  ia: "M12 3l1.8 4.7L18.5 9.5l-4.7 1.8L12 16l-1.8-4.7L5.5 9.5l4.7-1.8zM18 15l.9 2.1L21 18l-2.1.9L18 21l-.9-2.1L15 18l2.1-.9z",
+  presupuesto: "M4 7h16v10H4zM4 11h16M8 15h3",
+  requisitos: "M9 6h11M9 12h11M9 18h11M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2",
+  historial: "M4 12a8 8 0 1 0 2.3-5.6M4 4v4h4M12 8v4l3 2",
+  exportar: "M12 4v11M7 10l5 5 5-5M5 20h14",
+};
+
+function TabIcon({ name }: { name: string }) {
+  return (
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d={TAB_ICONS[name]} />
+    </svg>
+  );
+}
+
 function errorText(e: unknown) {
+  if (e instanceof ApiError && e.status === 404) return "Este diseno no existe. Revisa el enlace o abre uno desde tus proyectos.";
   if (e instanceof ApiError) return `La API respondio ${e.status}: ${JSON.stringify(e.body)}`;
   if (e instanceof TypeError) return `No se pudo conectar con la API en ${API_URL}. ¿Esta corriendo el backend?`;
   return String(e);
@@ -362,7 +381,9 @@ export function Editor({ designId }: { designId: string }) {
     return (
       <main className={styles.center}>
         <p className={styles.error}>{loadError}</p>
-        <Link href="/">← Volver</Link>
+        <Link href="/" className={styles.centerLink}>
+          Ir a mis proyectos
+        </Link>
       </main>
     );
   if (!state || !shown || !report || !shownReport) return <main className={styles.center}>Cargando diseno…</main>;
@@ -375,22 +396,22 @@ export function Editor({ designId }: { designId: string }) {
   return (
     <div className={styles.layout}>
       <header className={styles.topbar}>
-        <Link href="/" className={styles.back}>
-          ← Proyectos
+        <Link href="/" className={styles.brand} aria-label="IAProyect, ir a mis proyectos">
+          IAProyect
         </Link>
-        <div>
-          <strong>{state.design.name}</strong>
-          <span className={styles.muted}>
-            {" "}
-            · {label(state.room.spaceType)} {fmtM(state.room.length)} × {fmtM(state.room.width)} × {fmtM(state.room.height)}
-          </span>
-          <span className={styles.chips}>
-            <span className={styles.chip}>{label(state.design.style)}</span>
-            <span className={styles.chip}>presupuesto {state.design.budgetMode}</span>
-            <span className={styles.chip}>rev. {state.design.revision}</span>
-          </span>
+        <div className={styles.heading}>
+          <nav className={styles.crumbs} aria-label="Ruta">
+            <Link href="/">Proyectos</Link>
+            <span aria-hidden="true">/</span>
+            <span>{state.project.name}</span>
+          </nav>
+          <h1 className={styles.designTitle}>{state.design.name}</h1>
         </div>
-        <span className={shownReport.valid ? styles.badgeOk : styles.badgeBad}>{shownReport.valid ? "Valido" : "Con conflictos"}</span>
+        <span className={styles.chips}>
+          <span className={styles.chip}>{label(state.design.style)}</span>
+          <span className={styles.chip}>Presupuesto {state.design.budgetMode}</span>
+        </span>
+        <span className={shownReport.valid ? styles.statusOk : styles.statusBad}>{shownReport.valid ? "Valido" : "Con conflictos"}</span>
       </header>
 
       <div className={styles.viewport}>
@@ -426,10 +447,33 @@ export function Editor({ designId }: { designId: string }) {
           capture={captureCorners}
           onError={(text) => setMessage({ kind: "error", text })}
         />
-        <div className={styles.legend}>
-          <span className={styles.swDoor} /> zona de puerta <span className={styles.swWindow} /> acceso a ventana
-          <span className={styles.swPending} /> sin guardar <span className={styles.swConflict} /> interfiere
-        </div>
+        {/* Cuadro de rotulacion, como en un plano: que cuarto es, medidas, vista y que significa cada color */}
+        <dl className={styles.titleBlock}>
+          <div>
+            <dt>Espacio</dt>
+            <dd>{state.room.name}</dd>
+          </div>
+          <div>
+            <dt>Medidas</dt>
+            <dd>
+              {fmtM(state.room.length)} × {fmtM(state.room.width)}, alto {fmtM(state.room.height)}
+            </dd>
+          </div>
+          <div>
+            <dt>Vista</dt>
+            <dd>{view === "3d" ? "3D" : view === "foto" ? "Foto" : "Planta"}</dd>
+          </div>
+          <div>
+            <dt>Revision</dt>
+            <dd>{state.design.revision}</dd>
+          </div>
+          <div className={styles.tbLegend}>
+            <span><i className={styles.swDoor} /> Zona de puerta</span>
+            <span><i className={styles.swWindow} /> Acceso a ventana</span>
+            <span><i className={styles.swPending} /> Sin guardar</span>
+            <span><i className={styles.swConflict} /> Interfiere</span>
+          </div>
+        </dl>
       </div>
 
       <VersionTabs
@@ -497,14 +541,15 @@ export function Editor({ designId }: { designId: string }) {
             [
               ["diseno", "Diseno"],
               ["ia", "IA"],
-              ["presupuesto", "Presupuesto"],
+              ["presupuesto", "Costo"],
               ["requisitos", "Requisitos"],
               ["historial", "Historial"],
               ["exportar", "Exportar"],
             ] as const
           ).map(([key, text]) => (
             <button key={key} type="button" role="tab" aria-selected={sideTab === key} className={sideTab === key ? styles.sideTabOn : undefined} onClick={() => setSideTab(key)}>
-              {text}
+              <TabIcon name={key} />
+              <span>{text}</span>
             </button>
           ))}
         </nav>

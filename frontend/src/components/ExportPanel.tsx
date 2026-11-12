@@ -62,11 +62,11 @@ export function ExportPanel({ designId, revision, exportGlb, onError }: Props) {
   };
 
   const files: [string, string, string][] = [
-    ["pdf", "📄 Reporte PDF", "Renders, plano, presupuesto y listas"],
-    ["xlsx", "📊 Excel", "Compras, materiales, presupuesto y muebles"],
-    ["csv", "🧾 CSV", "Lista de compras y materiales"],
-    ["plan.svg", "📐 Plano SVG", "Planta con cotas (editable)"],
-    ["plan.pdf", "📐 Plano PDF", "Planta lista para imprimir"],
+    ["pdf", "Reporte PDF", "Renders, plano, presupuesto y listas"],
+    ["xlsx", "Excel", "Compras, materiales, presupuesto y muebles"],
+    ["csv", "CSV", "Lista de compras y materiales"],
+    ["plan.svg", "Plano SVG", "Planta con cotas (editable)"],
+    ["plan.pdf", "Plano PDF", "Planta lista para imprimir"],
   ];
 
   return (
@@ -77,22 +77,22 @@ export function ExportPanel({ designId, revision, exportGlb, onError }: Props) {
           {files.map(([format, title, hint]) => (
             <li key={format}>
               <a className={ai.download} href={api.exportUrl(designId, format)} download>
-                <strong>{title}</strong> <span className={styles.muted}>· {hint}</span>
+                <strong>{title}</strong> <span className={ai.downloadHint}>{hint}</span>
               </a>
             </li>
           ))}
           <li>
             <button type="button" className={ai.download} disabled={glbBusy} onClick={() => void downloadGlb()}>
-              <strong>🧊 Modelo 3D (GLB)</strong> <span className={styles.muted}>· {glbBusy ? "exportando…" : "para otros programas 3D"}</span>
+              <strong>Modelo 3D (GLB)</strong> <span className={ai.downloadHint}>{glbBusy ? "Exportando…" : "Para abrirlo en otros programas 3D"}</span>
             </button>
           </li>
           <li>
             {blender?.result?.blendUrl ? (
               <a className={ai.download} href={`${API_URL}${blender.result.blendUrl}`} download>
-                <strong>🏗️ Archivo de Blender (.blend)</strong> <span className={styles.muted}>· del ultimo render</span>
+                <strong>Archivo de Blender (.blend)</strong> <span className={ai.downloadHint}>Del ultimo render en Blender</span>
               </a>
             ) : (
-              <span className={styles.muted}>🏗️ El archivo .blend aparece cuando haces un render en Blender (pestana IA).</span>
+              <span className={ai.downloadHint}>El archivo .blend aparece cuando haces un render en Blender (pestana IA).</span>
             )}
           </li>
         </ul>

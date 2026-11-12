@@ -1,11 +1,30 @@
+/*
+ * Sistema visual "plano y material": el lenguaje de un plano arquitectonico (lineas, cotas, cuadro de rotulacion)
+ * con materiales mexicanos. Colores:
+ *   cal (fondo), grafito (texto), azul talavera (accion y seleccion), jade / ambar / grana (estados).
+ */
 :root {
-  --bg: #f6f5f2;
-  --panel: #fbfaf8;
+  --bg: #eef0ec;          /* cal */
+  --panel: #f7f8f5;       /* paneles */
   --card: #ffffff;
-  --text: #212529;
-  --muted: #6c727a;
-  --line: #e2ded6;
-  --accent: #1c7ed6;
+  --text: #1e2328;        /* grafito */
+  --muted: #5d645c;       /* texto secundario (contraste AA sobre cal) */
+  --line: #d6dad2;
+  --line-strong: #b4bab0;
+  --accent: #1f4fa3;      /* azul talavera */
+  --accent-ink: #163a7a;
+  --accent-soft: #e5ebf6;
+  --ok: #2e7d62;          /* jade */
+  --ok-soft: #e2f0e9;
+  --warn: #9a6412;        /* ambar */
+  --warn-soft: #fbf0dc;
+  --bad: #b42318;         /* grana */
+  --bad-soft: #fbe7e5;
+  --plan: #1f4fa3;        /* linea de plano */
+  --radius: 6px;
+  --radius-lg: 10px;
+  --font: var(--font-archivo), system-ui, sans-serif;
+  --shadow-float: 0 1px 2px rgba(30, 35, 40, 0.08), 0 6px 18px rgba(30, 35, 40, 0.08);
 }
 
 * {
@@ -18,9 +37,60 @@ body {
   padding: 0;
   background: var(--bg);
   color: var(--text);
-  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  font-family: var(--font);
+  font-size: 15px;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Titulos: Archivo expandido, como la rotulacion de un plano */
+h1,
+h2,
+h3,
+h4 {
+  font-stretch: 125%;
+  font-weight: 650;
+  letter-spacing: -0.005em;
+  line-height: 1.15;
 }
 
 a {
   color: var(--accent);
+  text-underline-offset: 3px;
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+}
+
+::selection {
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+}
+
+/* Foco visible solo con teclado, en todo el sitio */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Barras de desplazamiento discretas en los paneles */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-strong) transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

@@ -139,7 +139,7 @@ function ReferenceSection({ designId, busy, onError }: Pick<Props, "designId" | 
 
   return (
     <div className={styles.section}>
-      <h4>📷 Copiar un diseno de internet</h4>
+      <h4>Copiar un diseno de internet</h4>
       <span className={styles.status}>
         Sube la foto de un cuarto que te guste. La IA lo copia lo mejor posible en tu cuarto (con tus medidas, requisitos y presupuesto) en una
         version nueva; esta no se toca.
@@ -239,7 +239,7 @@ function ChatSection({ designId, busy, onApplied, onError }: Pick<Props, "design
 
   return (
     <div className={styles.section}>
-      <h4>💬 Pedirle un cambio a la IA</h4>
+      <h4>Pedirle un cambio a la IA</h4>
       <textarea
         className={styles.textarea}
         placeholder="Ej. 'hazlo mas minimalista', 'cambia el sofa por uno mas chico', 'agrega una planta junto a la ventana'"
@@ -327,7 +327,7 @@ function ImageSection({ designId, objectCount, busy, view, onView, capture, onEr
 
   return (
     <div className={styles.section}>
-      <h4>📸 Render realista</h4>
+      <h4>Render realista</h4>
       <span className={styles.status}>
         La IA convierte lo que ves en el visor en una foto realista, con los muebles en el mismo lugar. Acomoda la camara como quieras;
         la vista <strong>Foto</strong> (a la altura de los ojos) es la que mas se parece a una foto real.
@@ -389,7 +389,7 @@ function DesignSection({ designId, style, busy, onError }: Pick<Props, "designId
 
   return (
     <div className={styles.section}>
-      <h4>✨ Disenar con IA</h4>
+      <h4>Disenar con IA</h4>
       <span className={styles.status}>
         La IA arma un diseno completo para este cuarto (muebles, decoracion e iluminacion del catalogo) con tus medidas, requisitos
         y presupuesto. Se crea una version nueva; lo bloqueado y lo obligatorio se respetan.
@@ -472,7 +472,7 @@ function BlenderSection({ designId, objectCount, busy, onError }: Pick<Props, "d
 
   return (
     <div className={styles.section}>
-      <h4>🏗️ Render exacto en Blender</h4>
+      <h4>Render exacto en Blender</h4>
       <span className={styles.status}>
         Render fotografico hecho en Blender directo del modelo: cada mueble con su medida y posicion real (sin IA). Tambien genera el
         archivo .blend para abrirlo en Blender.

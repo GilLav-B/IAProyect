@@ -315,8 +315,8 @@ export function RoomScene({ state, view, floorKind, products, selectedId, confli
         if (performance.now() - dragEndedAt.current > 300) onSelect(null);
       }}
     >
-      <color attach="background" args={["#e7e3dc"]} />
-      <fog attach="fog" args={["#e7e3dc", span * 3, span * 6]} />
+      <color attach="background" args={["#e3e6e0"]} />
+      <fog attach="fog" args={["#e3e6e0", span * 3, span * 6]} />
 
       {/* Luz: HDRI de interior para reflejos + "sol" calido que entra por la ventana y proyecta sombras */}
       <Suspense fallback={null}>

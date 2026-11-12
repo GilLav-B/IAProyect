@@ -121,7 +121,7 @@ export function NewProject() {
     <div className={styles.layout}>
       <div className={styles.form}>
         <Link href="/" className={styles.back}>
-          ← Proyectos
+          Proyectos
         </Link>
         <h1>Nuevo proyecto</h1>
         <p className={styles.muted}>Define el espacio real. Despues agregas muebles del catalogo en el editor 3D.</p>

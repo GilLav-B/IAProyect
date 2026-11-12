@@ -240,3 +240,17 @@ ve el avance en vivo (SSE)**. n8n no toca nada en tiempo real (mover, rotar, col
   - Publicar flujos con n8n corriendo no siempre se aplica: `n8n/publish-workflows.ps1` los publica uno por uno con n8n
     detenido.
 - Scripts: `scripts/start-all.ps1` (todo en ventanas separadas) y `scripts/test-all.ps1` (todas las pruebas).
+
+## Rediseno de la interfaz (2026-11-11)
+
+- Concepto **"plano y material"**: el lenguaje de un plano arquitectonico (plantas, cotas, cuadro de rotulacion) con
+  materiales mexicanos. Colores en `frontend/src/app/globals.css`: cal `#EEF0EC` (fondo), grafito `#1E2328` (texto),
+  azul talavera `#1F4FA3` (acciones y seleccion), jade / ambar / grana para valido / advertencia / conflicto.
+- Tipografia: una sola familia, **Archivo**; los titulos usan su ancho expandido (como la rotulacion de un plano).
+- Elemento distintivo: cada diseno se dibuja como su **plano real** (`PlanDrawing.tsx`, con los datos del DesignState):
+  en el inicio cada version es una hoja con su plano y el hero muestra la sala de ejemplo con cotas, trazada una sola vez
+  al abrir (unico movimiento automatico; se respeta "reducir movimiento"). En el editor, el visor tiene un **cuadro de
+  rotulacion** (espacio, medidas, vista, revision y significado de colores).
+- Panel lateral con pestanas de icono y nombre fijas arriba; hojas de versiones que se desplazan en vez de aplastarse;
+  mensajes con borde de color segun su tipo; sin emojis en titulos. Error 404 de un diseno con mensaje claro y boton a
+  proyectos.

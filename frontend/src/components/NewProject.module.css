@@ -14,8 +14,8 @@
 }
 
 .form h1 {
-  margin: 8px 0 4px;
-  font-size: 26px;
+  margin: 10px 0 6px;
+  font-size: 28px;
 }
 
 .back {
@@ -33,7 +33,7 @@
   margin-top: 14px;
   padding: 14px;
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: var(--radius-lg);
   background: var(--card);
 }
 
@@ -63,10 +63,10 @@
   font: inherit;
   font-size: 14px;
   color: var(--text);
-  padding: 6px 8px;
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  background: var(--bg);
+  padding: 7px 9px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--radius);
+  background: var(--card);
 }
 
 .row3 {
@@ -100,8 +100,8 @@
 .segmented button {
   padding: 6px 12px;
   border-radius: 999px;
-  border: 1px solid var(--line);
-  background: var(--bg);
+  border: 1px solid var(--line-strong);
+  background: var(--card);
   color: var(--text);
   font: inherit;
   font-size: 13px;
@@ -111,8 +111,8 @@
 
 .segmented .on {
   border-color: var(--accent);
-  background: #e7f1fc;
-  color: #1864ab;
+  background: var(--accent-soft);
+  color: var(--accent-ink);
 }
 
 .opening {
@@ -141,9 +141,9 @@
 
 .remove {
   margin-left: auto;
-  border: 1px solid #ffc9c9;
-  background: #fff5f5;
-  color: #c92a2a;
+  border: 1px solid #efb4ae;
+  background: var(--bad-soft);
+  color: var(--bad);
   padding: 4px 8px;
 }
 
@@ -187,9 +187,9 @@
   margin-top: 14px;
   padding: 10px 12px;
   border-radius: 10px;
-  background: #fff5f5;
-  border: 1px solid #ffc9c9;
-  color: #c92a2a;
+  background: var(--bad-soft);
+  border: 1px solid #efb4ae;
+  color: var(--bad);
   font-size: 14px;
 }
 
@@ -228,7 +228,7 @@
   padding: 6px 10px;
   border-radius: 8px;
   font-size: 13px;
-  color: #343a40;
+  color: var(--text);
 }
 
 @media (max-width: 900px) {
